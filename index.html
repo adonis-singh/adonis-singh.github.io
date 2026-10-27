@@ -136,14 +136,10 @@ a { color: inherit; }
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
-.icon[aria-pressed="true"] canvas { filter: invert(1); }
+/* A selected 1-bit icon is repainted with a darker fill; a colour icon is darkened here. */
 .icon[aria-pressed="true"] canvas.color { filter: brightness(0.45); }
 .icon[aria-pressed="true"] .label { background: var(--ink); color: var(--win); }
-/* An open icon shows through a checkerboard, one icon pixel per square. */
-.icon.open canvas {
-  -webkit-mask: conic-gradient(#000 25%, #0000 0 50%, #000 0 75%, #0000 0) 0 0 / 4px 4px;
-  mask: conic-gradient(#000 25%, #0000 0 50%, #000 0 75%, #0000 0) 0 0 / 4px 4px;
-}
+
 
 /* Windows */
 .window {
@@ -403,39 +399,71 @@ const art = {
     return 2;
   },
 };
-// Pure black and white pixels in an icon take the theme's ink and paper; colours stay as drawn.
-function paintIcon(ctx, img) {
-  const probe = el("canvas", { width: PX, height: PX }).getContext("2d");
-  probe.drawImage(img, 0, 0);
+// Icons are drawn from their art each time the theme or their open state changes.
+// Pure black and white take the theme's ink and paper; colours stay as drawn.
+// Like a classic Mac icon mask, every pixel inside the outline is solid, so the desk never shows through.
+// A 1-bit icon keeps its lines in every state: open fills its paper with a light dot pattern,
+// selected with a 50% pattern, and open and selected shows as open (the label shows the selection).
+// An open colour icon shows paper on every other pixel.
+function paintIcon(ctx, art, open, selected) {
+  const probe = el("canvas", { width: PX, height: PX }).getContext("2d", { willReadFrequently: true });
+  if (typeof art === "function") drawPixels(probe, art);
+  else probe.drawImage(art, 0, 0);
   const [ink, win] = colors().map(c => { probe.fillStyle = c; return probe.fillStyle; });
   const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
   const [inkRgb, winRgb] = [hex(ink), hex(win)];
   const d = probe.getImageData(0, 0, PX, PX);
-  for (let i = 0; i < d.data.length; i += 4) {
-    const v = d.data[i];
-    if (d.data[i + 3] && v === d.data[i + 1] && v === d.data[i + 2] && (v === 0 || v === 255)) d.data.set(v ? winRgb : inkRgb, i);
+  const a = (i) => d.data[i * 4 + 3];
+  // Transparent pixels reachable from the edge are outside the icon; the rest are inside.
+  const outside = new Uint8Array(PX * PX);
+  const stack = [];
+  for (let k = 0; k < PX; k++) stack.push(k, (PX - 1) * PX + k, k * PX, k * PX + PX - 1);
+  while (stack.length) {
+    const i = stack.pop();
+    if (outside[i] || a(i)) continue;
+    outside[i] = 1;
+    const x = i % PX, y = i / PX | 0;
+    if (x > 0) stack.push(i - 1);
+    if (x < PX - 1) stack.push(i + 1);
+    if (y > 0) stack.push(i - PX);
+    if (y < PX - 1) stack.push(i + PX);
   }
+  const isMono = (o) => d.data[o] === d.data[o + 1] && d.data[o] === d.data[o + 2] && (d.data[o] === 0 || d.data[o] === 255);
+  let color = false;
+  for (let i = 0; i < PX * PX; i++) if (a(i) && !isMono(i * 4)) color = true;
+  for (let i = 0; i < PX * PX; i++) {
+    if (outside[i]) continue;
+    const o = i * 4, v = d.data[o];
+    const mono = isMono(o);
+    const x = i % PX, y = i / PX | 0, odd = (x + y) % 2, dot = !(x % 2) && !(y % 2);
+    const paper = !a(i) || (mono && v === 255) || (color && open && odd);
+    if (paper) d.data.set(!color && (open ? dot : selected && !odd) ? inkRgb : winRgb, o);
+    else if (mono) d.data.set(inkRgb, o);
+    d.data[o + 3] = 255;
+  }
+  ctx.clearRect(0, 0, PX, PX);
   ctx.putImageData(d, 0, 0);
   // A colour icon darkens when selected; inverting it would change its colours.
-  ctx.canvas.classList.toggle("color", d.data.some((v, i) => i % 4 === 0 && d.data[i + 3] && !(v === d.data[i + 1] && v === d.data[i + 2])));
+  ctx.canvas.classList.toggle("color", color);
 }
-const iconPainters = [];
+const iconPainters = new Map();
 function iconCanvas(item) {
   const c = el("canvas", { width: PX, height: PX });
   const ctx = c.getContext("2d");
+  const paint = (art) => iconPainters.set(item.id, () => {
+    const icon = icons.get(item.id);
+    paintIcon(ctx, art, icon.classList.contains("open"), icon.getAttribute("aria-pressed") === "true");
+  });
   if (item.icon) {
     const img = new Image();
-    let ready = false;
-    img.onload = () => { ready = true; paintIcon(ctx, img); };
+    img.onload = () => { paint(img); iconPainters.get(item.id)(); };
     img.src = item.icon;
-    iconPainters.push(() => ready && paintIcon(ctx, img));
   } else {
-    const paint = () => drawPixels(ctx, art[item.art || "disc"]);
-    paint();
-    iconPainters.push(paint);
+    paint(art[item.art || "disc"]);
   }
   return c;
 }
+const repaintIcon = (id) => iconPainters.has(id) && iconPainters.get(id)();
 
 /* Icons */
 for (const item of items) {
@@ -453,8 +481,13 @@ for (const item of items) {
   icons.set(item.id, b);
   iconList.append(el("li", {}, b));
 }
+for (const paint of iconPainters.values()) paint();
 function select(id) {
-  for (const [k, b] of icons) b.setAttribute("aria-pressed", String(k === id));
+  for (const [k, b] of icons) {
+    const was = b.getAttribute("aria-pressed") === "true";
+    b.setAttribute("aria-pressed", String(k === id));
+    if (was !== (k === id)) repaintIcon(k);
+  }
 }
 desk.addEventListener("pointerdown", e => { if (e.target === desk || e.target === iconList) select(null); });
 
@@ -593,7 +626,7 @@ function open(id, origin) {
   w.style.visibility = "hidden";
   desk.append(w);
   windows.set(id, w);
-  if (icon) icon.classList.add("open");
+  if (icon) { icon.classList.add("open"); repaintIcon(id); }
 
   // Cascade new windows from the top-left, keeping them on screen.
   const dr = desk.getBoundingClientRect();
@@ -623,7 +656,7 @@ function close(id) {
   for (const v of w.querySelectorAll("video")) v.pause();
   w.remove();
   windows.delete(id);
-  if (icon) icon.classList.remove("open");
+  if (icon) { icon.classList.remove("open"); repaintIcon(id); }
   zoom(from, back, () => {});
   const next = [...windows.values()].sort((a, b) => b.style.zIndex - a.style.zIndex)[0];
   if (next) { front(next); history.replaceState(null, "", "#" + [...windows].find(([, v]) => v === next)[0]); }
@@ -769,7 +802,7 @@ new ResizeObserver(() => {
 }).observe(desk);
 function themeChanged() {
   labelTheme();
-  for (const paint of iconPainters) paint();
+  for (const paint of iconPainters.values()) paint();
   redraw();
 }
 systemDark.addEventListener("change", themeChanged);

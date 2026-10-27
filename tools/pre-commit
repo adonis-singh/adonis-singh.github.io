@@ -1,0 +1,6 @@
+#!/bin/sh
+# Install with: ln -s ../../tools/pre-commit .git/hooks/pre-commit
+set -e
+cd "$(git rev-parse --show-toplevel)"
+python3 tools/stamp.py
+git add index.html

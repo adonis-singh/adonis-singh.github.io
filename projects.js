@@ -6,7 +6,8 @@
 //   blurb   one line, for the Read Me index
 //   body    paragraphs for the full view; [text](url) makes a link
 //   label   optional short name for icons, when name is too long
-//   icon    32x32 pixel icon (media/icons/); without one, a drawn disc
+//   icon    32x32 pixel icon (media/icons/), pure black and white; without one, a drawn disc
+//   iconColor true if the icon is in colour, so dark mode leaves it as drawn instead of inverting it
 //   info    [label, value] rows for the Get Info panel
 //   tweets  [{ date, text, href }] links to tweets about the project
 //   thumb   poster frame for the video
@@ -93,6 +94,7 @@ window.PROJECTS = [
       "It started from a conversation with [Aidan McLau](https://x.com/aidan_mclau), who helped bring the team together. A group of volunteers built it. It's offline now, but the code is still up.",
     ],
     icon: "media/icons/mcbench.png",
+    iconColor: true,
     info: [
       ["Started", "October 2024"],
       ["Site", "mcbench.ai, offline"],

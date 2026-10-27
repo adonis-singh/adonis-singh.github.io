@@ -152,8 +152,6 @@ a { color: inherit; }
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
-/* A selected 1-bit icon is repainted with a darker fill; a colour icon is darkened here. */
-.icon[aria-pressed="true"] canvas.color { filter: brightness(0.45); }
 .icon[aria-pressed="true"] .label { background: var(--ink); color: var(--win); }
 
 
@@ -415,13 +413,11 @@ const art = {
     return 2;
   },
 };
-// Icons are drawn from their art each time the theme or their open state changes.
+// Icons are drawn from their art again when the theme changes.
 // Pure black and white take the theme's ink and paper; colours stay as drawn.
 // Like a classic Mac icon mask, every pixel inside the outline is solid, so the desk never shows through.
-// A 1-bit icon keeps its lines in every state: open fills its paper with a light dot pattern,
-// selected with a 50% pattern, and open and selected shows as open (the label shows the selection).
-// An open colour icon shows paper on every other pixel.
-function paintIcon(ctx, art, open, selected) {
+// The art is never patterned: a dot pattern reads as the dithered desk. The label shows selection.
+function paintIcon(ctx, art) {
   const probe = el("canvas", { width: PX, height: PX }).getContext("2d", { willReadFrequently: true });
   if (typeof art === "function") drawPixels(probe, art);
   else probe.drawImage(art, 0, 0);
@@ -445,31 +441,21 @@ function paintIcon(ctx, art, open, selected) {
     if (y < PX - 1) stack.push(i + PX);
   }
   const isMono = (o) => d.data[o] === d.data[o + 1] && d.data[o] === d.data[o + 2] && (d.data[o] === 0 || d.data[o] === 255);
-  let color = false;
-  for (let i = 0; i < PX * PX; i++) if (a(i) && !isMono(i * 4)) color = true;
   for (let i = 0; i < PX * PX; i++) {
     if (outside[i]) continue;
-    const o = i * 4, v = d.data[o];
-    const mono = isMono(o);
-    const x = i % PX, y = i / PX | 0, odd = (x + y) % 2, dot = !(x % 2) && !(y % 2);
-    const paper = !a(i) || (mono && v === 255) || (color && open && odd);
-    if (paper) d.data.set(!color && (open ? dot : selected && !odd) ? inkRgb : winRgb, o);
-    else if (mono) d.data.set(inkRgb, o);
+    const o = i * 4;
+    if (!a(i) || (isMono(o) && d.data[o] === 255)) d.data.set(winRgb, o);
+    else if (isMono(o)) d.data.set(inkRgb, o);
     d.data[o + 3] = 255;
   }
   ctx.clearRect(0, 0, PX, PX);
   ctx.putImageData(d, 0, 0);
-  // A colour icon darkens when selected; inverting it would change its colours.
-  ctx.canvas.classList.toggle("color", color);
 }
 const iconPainters = new Map();
 function iconCanvas(item) {
   const c = el("canvas", { width: PX, height: PX });
   const ctx = c.getContext("2d");
-  const paint = (art) => iconPainters.set(item.id, () => {
-    const icon = icons.get(item.id);
-    paintIcon(ctx, art, icon.classList.contains("open"), icon.getAttribute("aria-pressed") === "true");
-  });
+  const paint = (art) => iconPainters.set(item.id, () => paintIcon(ctx, art));
   if (item.icon) {
     const img = new Image();
     img.onload = () => { paint(img); iconPainters.get(item.id)(); };
@@ -479,7 +465,6 @@ function iconCanvas(item) {
   }
   return c;
 }
-const repaintIcon = (id) => iconPainters.has(id) && iconPainters.get(id)();
 
 /* Icons */
 for (const item of items) {
@@ -499,11 +484,7 @@ for (const item of items) {
 }
 for (const paint of iconPainters.values()) paint();
 function select(id) {
-  for (const [k, b] of icons) {
-    const was = b.getAttribute("aria-pressed") === "true";
-    b.setAttribute("aria-pressed", String(k === id));
-    if (was !== (k === id)) repaintIcon(k);
-  }
+  for (const [k, b] of icons) b.setAttribute("aria-pressed", String(k === id));
 }
 desk.addEventListener("pointerdown", e => { if (e.target === desk || e.target === iconList) select(null); });
 
@@ -642,7 +623,6 @@ function open(id, origin) {
   w.style.visibility = "hidden";
   desk.append(w);
   windows.set(id, w);
-  if (icon) { icon.classList.add("open"); repaintIcon(id); }
 
   // Cascade new windows from the top-left, keeping them on screen.
   const dr = desk.getBoundingClientRect();
@@ -672,7 +652,6 @@ function close(id) {
   for (const v of w.querySelectorAll("video")) v.pause();
   w.remove();
   windows.delete(id);
-  if (icon) { icon.classList.remove("open"); repaintIcon(id); }
   zoom(from, back, () => {});
   const next = [...windows.values()].sort((a, b) => b.style.zIndex - a.style.zIndex)[0];
   if (next) { front(next); history.replaceState(null, "", "#" + [...windows].find(([, v]) => v === next)[0]); }

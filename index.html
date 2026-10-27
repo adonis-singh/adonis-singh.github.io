@@ -509,18 +509,32 @@ function player(src, poster, name) {
   }).observe(video);
   return wrap;
 }
+// The leaderboard's data file defines FRONTIER. It is loaded once; its runs come sorted by
+// model, then effort, so a model's last run is its highest tested effort.
+const frontiers = new Map();
+const loadFrontier = (src) => frontiers.get(src) || frontiers.set(src, new Promise(r => {
+  document.head.append(el("script", { src, onload: () => r(FRONTIER) }));
+})).get(src);
 function scores(s) {
   const ol = el("ol", { className: "scores" });
-  for (const r of s.rows) {
-    const fill = el("span");
-    fill.style.width = r.pct + "%";
-    ol.append(el("li", {}, [
-      el("span", {}, [r.model + " ", el("span", { className: "effort", textContent: r.effort })]),
-      el("span", { className: "bar" }, fill),
-      el("span", { className: "n", textContent: r.pct + "%" }),
-    ]));
-  }
-  return [ol, el("p", { className: "updated", textContent: "Best score per model and effort. Updated " + s.updated + "." })];
+  const note = el("p", { className: "updated" });
+  loadFrontier(s.source).then((FRONTIER) => {
+    const top = new Map();
+    for (const r of FRONTIER.runs) top.set(r.model, r);
+    const rows = [...top.values()].sort((a, b) => b.accuracy_pct - a.accuracy_pct).slice(0, s.top);
+    for (const r of rows) {
+      const fill = el("span");
+      fill.style.width = r.accuracy_pct + "%";
+      ol.append(el("li", {}, [
+        el("span", {}, [r.model + " ", el("span", { className: "effort", textContent: r.effort })]),
+        el("span", { className: "bar" }, fill),
+        el("span", { className: "n", textContent: r.accuracy_pct + "%" }),
+      ]));
+    }
+    const [y, m, d] = FRONTIER.generated.split("-");
+    note.textContent = `Top ${s.top} models, each at its highest tested effort. Updated ${new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}.`;
+  });
+  return [ol, note];
 }
 function content(item) {
   const c = el("div", { className: "content" });

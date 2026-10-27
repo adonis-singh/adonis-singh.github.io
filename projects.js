@@ -12,7 +12,7 @@
 //   thumb   poster frame for the video
 //   video   optional looping muted clip
 //   images  optional extra images
-//   scores  optional EyeBench-style score list
+//   scores  { source, top }: the top models from an EyeBench leaderboard's data file, each at its highest tested effort
 //   links   buttons in the full view
 
 window.SITE = {
@@ -96,23 +96,7 @@ window.PROJECTS = [
       { src: "media/eyebench-pattern-61.jpg", alt: "Complete the pattern" },
       { src: "media/eyebench-maze-100.jpg", alt: "Count the turns in a maze" },
     ],
-    scores: {
-      updated: "October 27, 2026",
-      rows: [
-        { model: "GPT-6 Astra", effort: "max", pct: 95 },
-        { model: "GPT-6.1 Terra", effort: "max", pct: 94 },
-        { model: "GPT-6 Astra", effort: "xhigh", pct: 93 },
-        { model: "GPT-6.1 Sol", effort: "max", pct: 93 },
-        { model: "GPT-6 Astra", effort: "high", pct: 88 },
-        { model: "GPT-6.1 Sol", effort: "xhigh", pct: 87 },
-        { model: "GPT-6 Astra", effort: "low", pct: 82 },
-        { model: "GPT-6 Astra", effort: "medium", pct: 82 },
-        { model: "GPT-6.1 Sol", effort: "high", pct: 80 },
-        { model: "Claude Opus 5.5", effort: "max", pct: 78 },
-        { model: "Claude Sonnet 5.5", effort: "max", pct: 71 },
-        { model: "Claude Opus 5.5", effort: "xhigh", pct: 69 },
-      ],
-    },
+    scores: { source: "https://adonis-singh.github.io/eyebench/data-frontier.js", top: 10 },
     links: [{ label: "Leaderboard", href: "https://adonis-singh.github.io/eyebench/" }],
   },
   {

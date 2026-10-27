@@ -93,6 +93,22 @@ a { color: inherit; }
   pointer-events: none;
 }
 .icons { position: relative; }
+.about {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: var(--win);
+  font-size: 15px;
+  line-height: 22px;
+  text-align: center;
+  text-decoration: none;
+}
+.about:hover, .about:focus-visible, .about:active { background: var(--ink); color: var(--win); outline: none; }
 .icons {
   display: flex;
   flex-direction: column;
@@ -101,7 +117,7 @@ a { color: inherit; }
   gap: 4px 8px;
   height: 100%;
   margin: 0;
-  padding: 16px 12px;
+  padding: 16px 12px 44px;
   list-style: none;
 }
 .icon {
@@ -692,10 +708,11 @@ const start = decodeURIComponent(location.hash.slice(1));
 open("readme");
 if (start) open(start);
 
-/* Desktop picture: each picture is dithered to the desk's own pixels, then dissolves into the next. */
-const HOLD = 20000;   // ms each picture stays
-const STEPS = 16;     // dissolve steps
-const STEP_MS = 90;   // ms per dissolve step
+/* Desktop picture: a random picture, dithered to the desk's own pixels. Every one to three
+   minutes, at random, another one slowly dissolves in. */
+const HOLD = [60000, 180000]; // ms a picture stays, picked at random between these
+const STEPS = 48;             // dissolve steps
+const STEP_MS = 100;          // ms per dissolve step
 const DEPTH = 0.5;    // darkest tone, as a share of pixels inked; keeps the picture behind the windows
 const picture = el("canvas", { className: "picture" });
 desk.prepend(picture);
@@ -704,7 +721,19 @@ const dots = el("canvas");
 const dctx = dots.getContext("2d");
 const sources = new Map();
 const load = p => sources.get(p) || sources.set(p, new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = p.src; })).get(p);
-let W, H, K, frame, px32, rank, inkPx, cur, shown = 0, gen = 0, timer;
+let W, H, K, frame, px32, rank, inkPx, cur, gen = 0, timer;
+const pick = (not) => { const n = Math.floor(Math.random() * (SITE.pictures.length - 1)); return n >= not ? n + 1 : n; };
+let shown = Math.floor(Math.random() * SITE.pictures.length);
+let upcoming = pick(shown);
+
+// The ? in the corner names the picture and opens its source page.
+const about = ext({ className: "about", textContent: "?" });
+desk.append(about);
+function label(p) {
+  about.href = p.page;
+  about.title = p.title;
+  about.setAttribute("aria-label", "About the desktop picture: " + p.title);
+}
 
 // The canvas has one pixel per screen pixel. Each dot is a whole number of screen pixels, K,
 // so a display scaled by 1.25 or 1.5 shows even dots with no moiré.
@@ -785,13 +814,15 @@ async function show(n, dissolve) {
   } else paint(next, next, 0);
   cur = next;
   shown = n;
+  label(p);
   if (still) return;
-  load(SITE.pictures[(n + 1) % SITE.pictures.length]);
-  timer = setTimeout(advance, HOLD);
+  upcoming = pick(n);
+  load(SITE.pictures[upcoming]);
+  timer = setTimeout(advance, HOLD[0] + Math.random() * (HOLD[1] - HOLD[0]));
 }
 function advance() {
   if (document.hidden) return document.addEventListener("visibilitychange", advance, { once: true });
-  show((shown + 1) % SITE.pictures.length, true);
+  show(upcoming, true);
 }
 function redraw() { size(); show(shown, false); }
 // The desk draws once it has a size, and again after it is resized.

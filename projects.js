@@ -21,22 +21,59 @@ window.SITE = {
     "I'm Adi. I'm a student, and I work on whatever I find interesting. Some of it is here.",
     "I used to work at LM Studio.",
   ],
-  // Desktop pictures, shown in this order, each dissolving into the next.
+  // Desktop pictures. One is picked at random, and every few minutes another dissolves in.
+  // title and page are what the desk's ? button shows and opens: the picture's source page.
   // position is where the picture sits in the spare room, as in CSS object-position (0 to 1).
   // kind "photo" covers the desk with Floyd-Steinberg; "drawing" is fitted whole with an ordered dither.
   // marks is what the dots draw: "dark" parts, "light" parts, or "theme" (dark parts in light mode, light parts in dark mode).
   // Drawings mark their dark lines. Photos of space mark the lit parts, so space stays empty in both modes.
   // All public domain, from Wikimedia Commons.
   pictures: [
-    { src: "media/desktop/kepler.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark" },    // Kepler, Mysterium Cosmographicum, 1596
-    { src: "media/desktop/galileo.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark" },   // Galileo, sketches of the Moon, 1609
-    { src: "media/desktop/hooke.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark" },     // Hooke, a flea, Micrographia, 1665
-    { src: "media/desktop/cajal.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark" },     // Ramón y Cajal, Purkinje neurons, 1899
-    { src: "media/desktop/tesla.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme" },       // Tesla's lab in Colorado Springs, 1899
-    { src: "media/desktop/eniac.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme" },       // ENIAC, US Army, 1946
-    { src: "media/desktop/edwhite.jpg", position: [0.5, 0.5], kind: "photo", marks: "light" },     // Ed White's spacewalk, NASA, 1965
-    { src: "media/desktop/eagle.jpg", position: [0.5, 0.5], kind: "photo", marks: "light" },       // Apollo 11 lander Eagle, NASA, 1969
-    { src: "media/desktop/ingenuity.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme" },   // Ingenuity's shadow on Mars, NASA/JPL-Caltech, 2021
+    {
+      src: "media/desktop/kepler.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark",
+      title: "Kepler's model of the solar system, 1596",
+      page: "https://commons.wikimedia.org/wiki/File:Mysterium_Cosmographicum_solar_system_model.jpg",
+    },
+    {
+      src: "media/desktop/galileo.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark",
+      title: "Galileo's drawings of the Moon, 1609",
+      page: "https://commons.wikimedia.org/wiki/File:Galileo%27s_sketches_of_the_moon.png",
+    },
+    {
+      src: "media/desktop/hooke.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark",
+      title: "A flea, from Hooke's Micrographia, 1665",
+      page: "https://commons.wikimedia.org/wiki/File:HookeFlea01.jpg",
+    },
+    {
+      src: "media/desktop/cajal.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark",
+      title: "Purkinje neurons, drawn by Ramón y Cajal, 1899",
+      page: "https://commons.wikimedia.org/wiki/File:PurkinjeCell.jpg",
+    },
+    {
+      src: "media/desktop/tesla.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme",
+      title: "Tesla's lab in Colorado Springs, 1899",
+      page: "https://commons.wikimedia.org/wiki/File:Tesla_colorado_adjusted.jpg",
+    },
+    {
+      src: "media/desktop/eniac.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme",
+      title: "ENIAC, 1946",
+      page: "https://commons.wikimedia.org/wiki/File:Classic_shot_of_the_ENIAC_(full_resolution).jpg",
+    },
+    {
+      src: "media/desktop/edwhite.jpg", position: [0.5, 0.5], kind: "photo", marks: "light",
+      title: "Ed White, the first American spacewalk, 1965",
+      page: "https://commons.wikimedia.org/wiki/File:Ed_White_performs_first_U.S._spacewalk_-_GPN-2006-000025-crop.jpg",
+    },
+    {
+      src: "media/desktop/eagle.jpg", position: [0.5, 0.5], kind: "photo", marks: "light",
+      title: "The Apollo 11 lander Eagle over the Moon, 1969",
+      page: "https://commons.wikimedia.org/wiki/File:Apollo_11_Lunar_Module_Eagle_in_landing_configuration_in_lunar_orbit_from_the_Command_and_Service_Module_Columbia.jpg",
+    },
+    {
+      src: "media/desktop/ingenuity.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme",
+      title: "Ingenuity's shadow on its first flight on Mars, 2021",
+      page: "https://commons.wikimedia.org/wiki/File:Ingenuity%27s_First_Black-and-White_Image_From_the_Air.jpg",
+    },
   ],
   links: [
     { label: "GitHub", href: "https://github.com/adonis-singh" },

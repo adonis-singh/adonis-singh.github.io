@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adi Singh</title>
+<link rel="icon" href="media/icons/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<script>
+// A theme picked with the menu bar toggle wins over the system's; otherwise the system decides.
+try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
+<style>
+:root {
+  --ink: #000;
+  --win: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #fff;
+    --win: #000;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #fff;
+  --win: #000;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--win);
+  color: var(--ink);
+  font-family: "DotGothic16", monospace;
+  font-size: 16px;
+  line-height: 1.75;
+  -webkit-font-smoothing: none;
+  -webkit-tap-highlight-color: transparent;
+}
+::selection { background: var(--ink); color: var(--win); }
+button { font: inherit; color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 1px dotted var(--ink); outline-offset: 2px; }
+
+/* Menu bar */
+.menubar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 10000;
+  display: flex;
+  height: 28px;
+  margin: 0;
+  padding: 0 8px;
+  list-style: none;
+  background: var(--win);
+  border-bottom: 1px solid var(--ink);
+}
+.menubar a {
+  display: block;
+  height: 27px;
+  padding: 0 10px;
+  line-height: 27px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.menubar .me { -webkit-text-stroke: 0.5px currentColor; }
+.menubar .theme { margin-left: auto; }
+.menubar button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 27px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: default;
+}
+.menubar button svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
+.menubar button:hover, .menubar button:focus-visible, .menubar button:active { background: var(--ink); color: var(--win); outline: none; }
+.menubar a:hover, .menubar a:focus-visible, .menubar a:active { background: var(--ink); color: var(--win); outline: none; }
+
+/* Desktop and icons */
+.desk { position: fixed; inset: 28px 0 0 0; overflow: hidden; background: var(--win); }
+.picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.icons { position: relative; }
+.icons {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap-reverse;
+  align-content: flex-start;
+  gap: 4px 8px;
+  height: 100%;
+  margin: 0;
+  padding: 16px 12px;
+  list-style: none;
+}
+.icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 104px;
+  height: 118px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  cursor: default;
+  touch-action: manipulation;
+}
+.icon canvas {
+  display: block;
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+}
+.icon .label {
+  max-width: 100%;
+  margin-top: 4px;
+  padding: 0 4px;
+  background: var(--win);
+  font-size: 14px;
+  line-height: 18px;
+  text-align: center;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.icon[aria-pressed="true"] canvas { filter: invert(1); }
+.icon[aria-pressed="true"] canvas.color { filter: brightness(0.45); }
+.icon[aria-pressed="true"] .label { background: var(--ink); color: var(--win); }
+/* An open icon shows through a checkerboard, one icon pixel per square. */
+.icon.open canvas {
+  -webkit-mask: conic-gradient(#000 25%, #0000 0 50%, #000 0 75%, #0000 0) 0 0 / 4px 4px;
+  mask: conic-gradient(#000 25%, #0000 0 50%, #000 0 75%, #0000 0) 0 0 / 4px 4px;
+}
+
+/* Windows */
+.window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, calc(100vw - 24px));
+  max-height: calc(100% - 24px);
+  background: var(--win);
+  border: 1px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.titlebar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex: none;
+  height: 22px;
+  padding: 4px 3px;
+  border-bottom: 1px solid var(--ink);
+  font-size: 16px;
+  line-height: 13px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.window.front .titlebar { background: repeating-linear-gradient(to bottom, var(--ink) 0 1px, var(--win) 1px 2px) content-box; }
+.titlebar h2 { margin: 0; padding: 0 8px; background: var(--win); font-size: inherit; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.close {
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  width: 15px;
+  height: 13px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  background: var(--win);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--win);
+  cursor: default;
+}
+.close svg { display: block; width: 7px; height: 7px; margin: auto; shape-rendering: crispEdges; }
+.close:active { background: var(--ink); color: var(--win); }
+.window:not(.front) .close { visibility: hidden; }
+.content { overflow: auto; padding: 14px 20px 20px; overscroll-behavior: contain; }
+.content p { margin: 0 0 14px; }
+.content > :last-child { margin-bottom: 0; }
+
+/* Project index in the Read Me */
+.index { margin: 18px 0 0; padding: 0; list-style: none; border: 1px solid var(--ink); }
+.index li + li { border-top: 1px solid var(--ink); }
+.index button {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 14px;
+  width: 100%;
+  padding: 5px 10px 6px;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: default;
+}
+.index .blurb, .index .year { opacity: 0.55; }
+.index .blurb { grid-column: 1 / -1; }
+.index button:hover, .index button:active { background: var(--ink); color: var(--win); }
+
+/* Get Info and tweets */
+.info {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 14px;
+  margin: 18px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--ink);
+}
+.info dt { text-align: right; opacity: 0.55; }
+.info dd { margin: 0; }
+.tweets { margin: 18px 0 0; padding: 0; list-style: none; }
+.tweets li { display: grid; grid-template-columns: 7.5em 1fr; gap: 12px; }
+.tweets .date { opacity: 0.55; }
+.tweets a:hover, .content p a:hover { background: var(--ink); color: var(--win); text-decoration: none; }
+
+/* Push buttons */
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.btn {
+  display: inline-block;
+  min-width: 88px;
+  padding: 2px 14px;
+  border: 1px solid var(--ink);
+  border-radius: 7px;
+  box-shadow: 0 0 0 1px var(--ink) inset;
+  background: var(--win);
+  text-align: center;
+  text-decoration: none;
+}
+.btn:active { background: var(--ink); color: var(--win); }
+
+/* Scores */
+.scores { margin: 4px 0 0; padding: 0; list-style: none; }
+.scores li { display: grid; grid-template-columns: 190px 1fr 40px; gap: 12px; align-items: center; }
+.scores .effort { opacity: 0.55; }
+.scores .bar { display: block; height: 12px; border: 1px solid var(--ink); }
+.scores .bar span { display: block; height: 100%; background: var(--ink); }
+.scores .n { text-align: right; }
+.content .updated { margin-top: 12px; opacity: 0.55; }
+
+/* Image composite, and the window it opens */
+.composite {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  width: 100%;
+  margin: 4px 0 14px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  gap: 1px;
+  cursor: zoom-in;
+}
+.composite img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #fff; }
+.composite:active { filter: invert(1); }
+.window.wide { width: min(880px, calc(100vw - 24px)); }
+.pictures { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pictures figure { margin: 0; }
+.pictures figure:first-child { grid-column: 1 / -1; }
+.pictures img { display: block; width: 100%; height: auto; border: 1px solid var(--ink); }
+.pictures figcaption { margin-top: 4px; opacity: 0.55; }
+
+/* Movie player */
+.player { margin: 4px 0 14px; border: 1px solid var(--ink); }
+.player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
+.controls { display: flex; align-items: center; gap: 8px; height: 22px; padding: 0 6px 0 0; border-top: 1px solid var(--ink); }
+.play { display: grid; place-items: center; width: 28px; height: 21px; padding: 0; border: 0; border-right: 1px solid var(--ink); background: var(--win); cursor: default; }
+.play:active { background: var(--ink); color: var(--win); }
+.play svg { display: block; width: 10px; height: 10px; shape-rendering: crispEdges; }
+.play .i-play { display: none; }
+.player.paused .i-play { display: block; }
+.player.paused .i-pause { display: none; }
+.scrub { flex: 1; height: 10px; border: 1px solid var(--ink); }
+.scrub span { display: block; width: 0; height: 100%; background: var(--ink); }
+
+/* Zoom rectangles */
+.zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
+
+@media (max-width: 600px) {
+  .menubar { padding: 0; }
+  .menubar a { padding: 0 7px; }
+  .icons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-content: start;
+    gap: 12px 0;
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px 4px;
+  }
+  .icon { width: auto; min-width: 0; }
+  .window { inset: 0 !important; width: auto; max-height: none; box-shadow: none; border-width: 0; }
+  .titlebar { height: 28px; padding: 6px 3px; cursor: default; }
+  .close { top: 6px; width: 17px; height: 15px; }
+  .content { flex: 1; padding: 12px 14px 20px; }
+  .scores li { grid-template-columns: 1fr 40px; gap: 0 12px; margin-bottom: 6px; }
+  .scores .bar { grid-column: 1 / -1; grid-row: 2; }
+  .strip img { width: 78%; }
+}
+</style>
+</head>
+<body>
+
+<ul class="menubar" id="menubar"></ul>
+<main class="desk" id="desk">
+  <ul class="icons" id="icons"></ul>
+</main>
+
+<script src="projects.js"></script>
+<script>
+const desk = document.getElementById("desk");
+const iconList = document.getElementById("icons");
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const phone = matchMedia("(max-width: 600px)");
+const PX = 32; // icon art is drawn at 32x32 and shown at 64x64
+
+const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: [], art: "doc" };
+const items = [readme, ...PROJECTS];
+const byId = new Map(items.map(p => [p.id, p]));
+const icons = new Map();
+const windows = new Map();
+let z = 1;
+let cascade = 0;
+
+const el = (tag, props = {}, kids = []) => {
+  const n = Object.assign(document.createElement(tag), props);
+  for (const k of [].concat(kids)) n.append(k);
+  return n;
+};
+
+/* Menu bar */
+const menubar = document.getElementById("menubar");
+const me = el("a", { className: "me", href: "#readme", textContent: SITE.name });
+menubar.append(el("li", {}, me));
+const ext = (props) => el("a", { target: "_blank", rel: "noopener", ...props });
+for (const l of SITE.links) menubar.append(el("li", {}, ext({ href: l.href, textContent: l.label })));
+
+/* Light and dark */
+const systemDark = matchMedia("(prefers-color-scheme: dark)");
+const isDark = () => (document.documentElement.dataset.theme || (systemDark.matches ? "dark" : "light")) === "dark";
+// A circle, half filled: the left half is ink.
+const themeBtn = el("button", { type: "button", innerHTML: '<svg viewBox="0 0 13 13"><path d="M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2h-1zM0 4h1v5H0zM12 4h1v5h-1zM1 9h1v2H1zM11 9h1v2h-1zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM6 1h1v11H6zM4 1h2v11H4zM2 2h2v9H2zM1 4h1v5H1z" fill="currentColor"/></svg>' });
+const labelTheme = () => {
+  const next = isDark() ? "Light mode" : "Dark mode";
+  themeBtn.setAttribute("aria-label", next);
+  themeBtn.title = next;
+};
+themeBtn.addEventListener("click", () => {
+  const next = isDark() ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("theme", next); } catch {}
+  themeChanged();
+});
+menubar.append(el("li", { className: "theme" }, themeBtn));
+labelTheme();
+
+/* Icon art */
+const colors = () => {
+  const css = getComputedStyle(document.documentElement);
+  return [css.getPropertyValue("--ink").trim(), css.getPropertyValue("--win").trim()];
+};
+function drawPixels(ctx, fn) {
+  const [ink, win] = colors();
+  ctx.clearRect(0, 0, PX, PX);
+  for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) {
+    const v = fn(x, y);
+    if (v) { ctx.fillStyle = v === 1 ? ink : win; ctx.fillRect(x, y, 1, 1); }
+  }
+}
+const art = {
+  // A document with a folded corner and text lines.
+  doc: (x, y) => {
+    if (x < 6 || x > 25 || y < 2 || y > 29) return 0;
+    if (x > 19 && y < 8 && x - 19 > y - 2) return 0;
+    if (x === 6 || x === 25 || y === 2 || y === 29) return 1;
+    if (x - 19 === y - 2 && x >= 19) return 1;
+    if (x === 19 && y <= 8) return 1;
+    if (y === 8 && x >= 19) return 1;
+    if (y >= 12 && y <= 25 && y % 3 === 0 && x >= 9 && x <= 22) return 1;
+    return 2;
+  },
+  // A small optical disc.
+  disc: (x, y) => {
+    const d = Math.hypot(x - 15.5, y - 15.5);
+    if (d > 14) return 0;
+    if (d > 13) return 1;
+    if (d < 2.5) return 0;
+    if (d < 3.5) return 1;
+    if (d < 6 && d > 5) return 1;
+    if (x > 17 && x < 22 && y > 6 && y < 11 && d > 9) return 1;
+    return 2;
+  },
+};
+// Pure black and white pixels in an icon take the theme's ink and paper; colours stay as drawn.
+function paintIcon(ctx, img) {
+  const probe = el("canvas", { width: PX, height: PX }).getContext("2d");
+  probe.drawImage(img, 0, 0);
+  const [ink, win] = colors().map(c => { probe.fillStyle = c; return probe.fillStyle; });
+  const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+  const [inkRgb, winRgb] = [hex(ink), hex(win)];
+  const d = probe.getImageData(0, 0, PX, PX);
+  for (let i = 0; i < d.data.length; i += 4) {
+    const v = d.data[i];
+    if (d.data[i + 3] && v === d.data[i + 1] && v === d.data[i + 2] && (v === 0 || v === 255)) d.data.set(v ? winRgb : inkRgb, i);
+  }
+  ctx.putImageData(d, 0, 0);
+  // A colour icon darkens when selected; inverting it would change its colours.
+  ctx.canvas.classList.toggle("color", d.data.some((v, i) => i % 4 === 0 && d.data[i + 3] && !(v === d.data[i + 1] && v === d.data[i + 2])));
+}
+const iconPainters = [];
+function iconCanvas(item) {
+  const c = el("canvas", { width: PX, height: PX });
+  const ctx = c.getContext("2d");
+  if (item.icon) {
+    const img = new Image();
+    let ready = false;
+    img.onload = () => { ready = true; paintIcon(ctx, img); };
+    img.src = item.icon;
+    iconPainters.push(() => ready && paintIcon(ctx, img));
+  } else {
+    const paint = () => drawPixels(ctx, art[item.art || "disc"]);
+    paint();
+    iconPainters.push(paint);
+  }
+  return c;
+}
+
+/* Icons */
+for (const item of items) {
+  const b = el("button", { className: "icon", type: "button", title: item.name }, [iconCanvas(item), el("span", { className: "label", textContent: item.label || item.name })]);
+  b.setAttribute("aria-pressed", "false");
+  b.dataset.id = item.id;
+  b.addEventListener("pointerdown", e => e.stopPropagation());
+  b.addEventListener("click", e => {
+    // Keyboard (detail 0) and touch open on one activation; a mouse selects, then double-click opens.
+    if (e.detail === 0 || b.lastPointer === "touch" || b.lastPointer === "pen") open(item.id);
+    else select(item.id);
+  });
+  b.addEventListener("pointerup", e => { b.lastPointer = e.pointerType; });
+  b.addEventListener("dblclick", () => open(item.id));
+  icons.set(item.id, b);
+  iconList.append(el("li", {}, b));
+}
+function select(id) {
+  for (const [k, b] of icons) b.setAttribute("aria-pressed", String(k === id));
+}
+desk.addEventListener("pointerdown", e => { if (e.target === desk || e.target === iconList) select(null); });
+
+/* Zoom rectangles between an icon and a window */
+function zoom(from, to, done) {
+  if (still) return done();
+  const steps = 8;
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const r = {
+      left: from.left + (to.left - from.left) * t,
+      top: from.top + (to.top - from.top) * t,
+      width: from.width + (to.width - from.width) * t,
+      height: from.height + (to.height - from.height) * t,
+    };
+    setTimeout(() => {
+      const box = el("div", { className: "zoomrect" });
+      Object.assign(box.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
+      document.body.append(box);
+      setTimeout(() => box.remove(), 70);
+    }, i * 18);
+  }
+  setTimeout(done, steps * 18 + 20);
+}
+
+/* Window content */
+function player(src, poster, name) {
+  const video = el("video", { src, poster: poster || "", muted: true, loop: true, playsInline: true, preload: "metadata" });
+  video.setAttribute("aria-label", name);
+  const fill = el("span");
+  const playSvg = '<svg class="i-play" viewBox="0 0 10 10"><path d="M2 0h1v10H2zM3 1h1v8H3zM4 2h1v6H4zM5 3h1v4H5zM6 4h1v2H6z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 10 10"><path d="M1 0h3v10H1zM6 0h3v10H6z" fill="currentColor"/></svg>';
+  const btn = el("button", { className: "play", type: "button", innerHTML: playSvg });
+  btn.setAttribute("aria-label", "Play or pause");
+  const scrub = el("div", { className: "scrub" }, fill);
+  const wrap = el("div", { className: "player paused" }, [video, el("div", { className: "controls" }, [btn, scrub])]);
+  const tick = () => {
+    fill.style.width = (video.currentTime / video.duration) * 100 + "%";
+    if (!video.paused) requestAnimationFrame(tick);
+  };
+  video.addEventListener("play", () => { wrap.classList.remove("paused"); requestAnimationFrame(tick); });
+  video.addEventListener("pause", () => wrap.classList.add("paused"));
+  video.addEventListener("seeked", tick);
+  btn.addEventListener("click", () => { wrap.userPaused = !video.paused; video.paused ? video.play() : video.pause(); });
+  scrub.addEventListener("pointerdown", e => {
+    const r = scrub.getBoundingClientRect();
+    video.currentTime = ((e.clientX - r.left) / r.width) * video.duration;
+  });
+  // Play only while on screen, and never if the visitor paused it or prefers no motion.
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting && !wrap.userPaused && !still) video.play();
+    else video.pause();
+  }).observe(video);
+  return wrap;
+}
+function scores(s) {
+  const ol = el("ol", { className: "scores" });
+  for (const r of s.rows) {
+    const fill = el("span");
+    fill.style.width = r.pct + "%";
+    ol.append(el("li", {}, [
+      el("span", {}, [r.model + " ", el("span", { className: "effort", textContent: r.effort })]),
+      el("span", { className: "bar" }, fill),
+      el("span", { className: "n", textContent: r.pct + "%" }),
+    ]));
+  }
+  return [ol, el("p", { className: "updated", textContent: "Best score per model and effort. Updated " + s.updated + "." })];
+}
+function content(item) {
+  const c = el("div", { className: "content" });
+  for (const p of item.body || []) {
+    // [text](url) in a paragraph becomes a link.
+    const parts = p.split(/\[([^\]]+)\]\(([^)]+)\)/);
+    c.append(el("p", {}, parts.map((t, i) => i % 3 === 1 ? ext({ href: parts[i + 1], textContent: t }) : i % 3 === 2 ? "" : t)));
+  }
+  if (item.index) {
+    c.append(el("ul", { className: "index" }, item.index.map(p => {
+      const b = el("button", { type: "button" }, [
+        el("span", { textContent: p.name }),
+        el("span", { className: "year", textContent: p.year }),
+        el("span", { className: "blurb", textContent: p.blurb }),
+      ]);
+      b.addEventListener("click", () => open(p.id));
+      return el("li", {}, b);
+    })));
+  }
+  if (item.video) c.append(player(item.video, item.thumb, item.name));
+  if (item.images) {
+    const id = item.id + "-images";
+    byId.set(id, { id, name: item.name + " images", pictures: item.images, links: [], wide: true });
+    const b = el("button", { className: "composite", type: "button" }, item.images.map(i => el("img", { src: i.src, alt: i.alt })));
+    b.setAttribute("aria-label", "Open " + item.name + " images");
+    b.addEventListener("click", () => open(id, b));
+    c.append(b);
+  }
+  if (item.pictures) c.append(el("div", { className: "pictures" }, item.pictures.map(i => el("figure", {}, [el("img", { src: i.src, alt: i.alt }), el("figcaption", { textContent: i.alt })]))));
+  if (item.scores) c.append(...scores(item.scores));
+  if (item.info) c.append(el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })])));
+  if (item.tweets && item.tweets.length) c.append(el("ul", { className: "tweets" }, item.tweets.map(t => el("li", {}, [el("span", { className: "date", textContent: t.date }), ext({ href: t.href, textContent: t.text })]))));
+  if (item.links.length) c.append(el("div", { className: "buttons" }, item.links.map(l => ext({ className: "btn", href: l.href, textContent: l.label }))));
+  return c;
+}
+
+/* Windows */
+function front(w) {
+  for (const o of windows.values()) o.classList.toggle("front", o === w);
+  w.style.zIndex = ++z;
+}
+function open(id, origin) {
+  const item = byId.get(id);
+  if (!item) return;
+  const icon = icons.get(id);
+  if (icon) select(id);
+  history.replaceState(null, "", "#" + id);
+  if (windows.has(id)) { const w = windows.get(id); front(w); w.focus(); return; }
+
+  const closeBtn = el("button", { className: "close", type: "button", innerHTML: '<svg viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z" fill="currentColor"/></svg>' });
+  closeBtn.setAttribute("aria-label", "Close");
+  const title = el("div", { className: "titlebar" }, [closeBtn, el("h2", { textContent: item.name })]);
+  const w = el("section", { className: item.wide ? "window wide" : "window", tabIndex: -1 }, [title, content(item)]);
+  w.origin = icon ? icon.querySelector("canvas") : origin;
+  w.setAttribute("aria-label", item.name);
+  w.style.visibility = "hidden";
+  desk.append(w);
+  windows.set(id, w);
+  if (icon) icon.classList.add("open");
+
+  // Cascade new windows from the top-left, keeping them on screen.
+  const dr = desk.getBoundingClientRect();
+  const left = Math.max(12, Math.min(24 + cascade * 24, dr.width - w.offsetWidth - 12));
+  const top = Math.max(12, Math.min(16 + cascade * 24, dr.height - w.offsetHeight - 12));
+  cascade = (cascade + 1) % 8;
+  w.style.left = left + "px";
+  w.style.top = top + "px";
+  front(w);
+
+  zoom(w.origin.getBoundingClientRect(), w.getBoundingClientRect(), () => {
+    w.style.visibility = "";
+    w.focus();
+  });
+
+  w.addEventListener("pointerdown", () => front(w));
+  closeBtn.addEventListener("pointerdown", e => e.stopPropagation());
+  closeBtn.addEventListener("click", () => close(id));
+  drag(w, title);
+}
+function close(id) {
+  const w = windows.get(id);
+  if (!w) return;
+  const icon = icons.get(id);
+  const from = w.getBoundingClientRect();
+  const back = w.origin.isConnected ? w.origin.getBoundingClientRect() : from;
+  for (const v of w.querySelectorAll("video")) v.pause();
+  w.remove();
+  windows.delete(id);
+  if (icon) icon.classList.remove("open");
+  zoom(from, back, () => {});
+  const next = [...windows.values()].sort((a, b) => b.style.zIndex - a.style.zIndex)[0];
+  if (next) { front(next); history.replaceState(null, "", "#" + [...windows].find(([, v]) => v === next)[0]); }
+  else history.replaceState(null, "", location.pathname);
+  if (w.origin.isConnected) (icon || w.origin).focus();
+}
+function drag(w, handle) {
+  let sx, sy, ox, oy;
+  handle.addEventListener("pointerdown", e => {
+    if (phone.matches || e.button !== 0) return;
+    sx = e.clientX; sy = e.clientY; ox = w.offsetLeft; oy = w.offsetTop;
+    handle.setPointerCapture(e.pointerId);
+    handle.style.cursor = "grabbing";
+  });
+  handle.addEventListener("pointermove", e => {
+    if (!handle.hasPointerCapture(e.pointerId)) return;
+    const dr = desk.getBoundingClientRect();
+    w.style.left = Math.max(40 - w.offsetWidth, Math.min(ox + e.clientX - sx, dr.width - 40)) + "px";
+    w.style.top = Math.max(0, Math.min(oy + e.clientY - sy, dr.height - 24)) + "px";
+  });
+  handle.addEventListener("pointerup", () => { handle.style.cursor = ""; });
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  const top = [...windows].sort(([, a], [, b]) => b.style.zIndex - a.style.zIndex)[0];
+  if (top) close(top[0]);
+});
+const fromHash = () => { const id = decodeURIComponent(location.hash.slice(1)); if (id) open(id); };
+addEventListener("hashchange", fromHash);
+// Every visit starts with the Read Me open; a project in the URL opens on top of it.
+const start = decodeURIComponent(location.hash.slice(1));
+open("readme");
+if (start) open(start);
+
+/* Desktop picture: each picture is dithered to the desk's own pixels, then dissolves into the next. */
+const HOLD = 20000;   // ms each picture stays
+const STEPS = 16;     // dissolve steps
+const STEP_MS = 90;   // ms per dissolve step
+const DEPTH = 0.5;    // darkest tone, as a share of pixels inked; keeps the picture behind the windows
+const picture = el("canvas", { className: "picture" });
+desk.prepend(picture);
+const pctx = picture.getContext("2d");
+const dots = el("canvas");
+const dctx = dots.getContext("2d");
+const sources = new Map();
+const load = p => sources.get(p) || sources.set(p, new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = p.src; })).get(p);
+let W, H, K, frame, px32, rank, inkPx, cur, shown = 0, gen = 0, timer;
+
+// The canvas has one pixel per screen pixel. Each dot is a whole number of screen pixels, K,
+// so a display scaled by 1.25 or 1.5 shows even dots with no moiré.
+function size() {
+  const dpr = devicePixelRatio;
+  K = Math.max(1, Math.round(dpr));
+  picture.width = Math.round(desk.clientWidth * dpr);
+  picture.height = Math.round(desk.clientHeight * dpr);
+  W = Math.ceil(picture.width / K);
+  H = Math.ceil(picture.height / K);
+  dots.width = W;
+  dots.height = H;
+  frame = dctx.createImageData(W, H);
+  px32 = new Uint32Array(frame.data.buffer);
+  rank = new Uint8Array(W * H);
+  for (let i = 0; i < rank.length; i += 65536) crypto.getRandomValues(rank.subarray(i, i + 65536));
+  pctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--ink").trim();
+  pctx.fillRect(0, 0, 1, 1);
+  inkPx = new Uint32Array(pctx.getImageData(0, 0, 1, 1).data.buffer)[0];
+}
+// 8x8 Bayer thresholds for the ordered dither.
+const BAYER = [0,32,8,40,2,34,10,42,48,16,56,24,50,18,58,26,12,44,4,36,14,46,6,38,60,28,52,20,62,30,54,22,3,35,11,43,1,33,9,41,51,19,59,27,49,17,57,25,15,47,7,39,13,45,5,37,63,31,55,23,61,29,53,21].map(v => (v + 0.5) / 64);
+// The picture as 1-bit ink: a drawing with an ordered dither, a photo with Floyd-Steinberg.
+// p.marks says whether the dots draw the picture's dark or light parts.
+function dither(img, p) {
+  const [fx, fy] = p.position;
+  const c = el("canvas", { width: W, height: H });
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  // A photo covers the desk. A drawing is fitted whole, with a margin, on white paper.
+  const s = p.kind === "photo" ? Math.max(W / img.width, H / img.height) : Math.min(W / img.width, H / img.height) * 0.9;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, W, H);
+  ctx.drawImage(img, (W - img.width * s) * fx, (H - img.height * s) * fy, img.width * s, img.height * s);
+  const d = ctx.getImageData(0, 0, W, H).data;
+  const lightInk = p.marks === "light" || (p.marks === "theme" && isDark());
+  const e = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) e[i] = (lightInk ? d[i * 4] : 255 - d[i * 4]) / 255 * DEPTH;
+  const out = new Uint8Array(W * H);
+  if (p.kind === "drawing") {
+    for (let i = 0; i < W * H; i++) out[i] = e[i] > BAYER[((i / W | 0) % 8) * 8 + (i % W) % 8] ? 1 : 0;
+    return out;
+  }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    const on = e[i] > 0.5 ? 1 : 0;
+    const err = e[i] - on;
+    out[i] = on;
+    if (x + 1 < W) e[i + 1] += err * 7 / 16;
+    if (y + 1 < H) {
+      if (x > 0) e[i + W - 1] += err * 3 / 16;
+      e[i + W] += err * 5 / 16;
+      if (x + 1 < W) e[i + W + 1] += err / 16;
+    }
+  }
+  return out;
+}
+// Pixels whose random rank is below the threshold show the next picture.
+function paint(from, to, threshold) {
+  for (let i = 0; i < W * H; i++) px32[i] = (rank[i] < threshold ? to[i] : from[i]) ? inkPx : 0;
+  dctx.putImageData(frame, 0, 0);
+  pctx.imageSmoothingEnabled = false;
+  pctx.clearRect(0, 0, picture.width, picture.height);
+  pctx.drawImage(dots, 0, 0, W * K, H * K);
+}
+async function show(n, dissolve) {
+  const g = ++gen;
+  clearTimeout(timer);
+  const p = SITE.pictures[n];
+  const img = await load(p);
+  if (g !== gen) return;
+  const next = dither(img, p);
+  if (dissolve) {
+    for (let k = 1; k <= STEPS; k++) {
+      await new Promise(r => setTimeout(r, STEP_MS));
+      if (g !== gen) return;
+      paint(cur, next, (k * 256) / STEPS);
+    }
+  } else paint(next, next, 0);
+  cur = next;
+  shown = n;
+  if (still) return;
+  load(SITE.pictures[(n + 1) % SITE.pictures.length]);
+  timer = setTimeout(advance, HOLD);
+}
+function advance() {
+  if (document.hidden) return document.addEventListener("visibilitychange", advance, { once: true });
+  show((shown + 1) % SITE.pictures.length, true);
+}
+function redraw() { size(); show(shown, false); }
+// The desk draws once it has a size, and again after it is resized.
+let resizing;
+new ResizeObserver(() => {
+  clearTimeout(resizing);
+  if (desk.clientWidth && desk.clientHeight) resizing = setTimeout(redraw, W ? 150 : 0);
+}).observe(desk);
+function themeChanged() {
+  labelTheme();
+  for (const paint of iconPainters) paint();
+  redraw();
+}
+systemDark.addEventListener("change", themeChanged);
+</script>
+</body>
+</html>

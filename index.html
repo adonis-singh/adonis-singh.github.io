@@ -262,7 +262,8 @@ a { color: inherit; }
 .scores .bar { display: block; height: 12px; border: 1px solid var(--ink); }
 .scores .bar span { display: block; height: 100%; background: var(--ink); }
 .scores .n { text-align: right; }
-.content .updated { margin-top: 12px; opacity: 0.55; }
+.content .updated { margin-top: 12px; }
+.content .updated span { opacity: 0.55; }
 
 /* Image composite, and the window it opens */
 .composite {
@@ -332,7 +333,7 @@ a { color: inherit; }
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=5f3ba99171"></script>
+<script src="projects.js?v=bc55dbc1be"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -521,7 +522,8 @@ function scores(s) {
       ]));
     }
     const [y, m, d] = FRONTIER.generated.split("-");
-    note.textContent = `Top ${s.top} models, each at its highest tested effort. Updated ${new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}.`;
+    const updated = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+    note.append(el("span", { textContent: `Top ${rows.length} of ${top.size} models, each at its highest tested effort. Updated ${updated}. ` }), ext({ href: s.page, textContent: `See all ${top.size}` }));
   });
   return [ol, note];
 }

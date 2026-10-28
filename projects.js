@@ -13,7 +13,8 @@
 //   thumb   poster frame for the video
 //   video   optional looping muted clip
 //   images  optional extra images
-//   scores  { source, top }: the top models from an EyeBench leaderboard's data file, each at its highest tested effort
+//   scores  { page, source, top }: the top models from an EyeBench leaderboard's data file, each at its
+//           highest tested effort, with a link to the full leaderboard page
 //   links   buttons in the full view
 
 window.SITE = {
@@ -135,8 +136,8 @@ window.PROJECTS = [
       { src: "media/eyebench-pattern-61.jpg", alt: "Complete the pattern" },
       { src: "media/eyebench-maze-100.jpg", alt: "Count the turns in a maze" },
     ],
-    scores: { source: "https://adonis-singh.github.io/eyebench/data-frontier.js", top: 10 },
-    links: [{ label: "Leaderboard", href: "https://adonis-singh.github.io/eyebench/" }],
+    scores: { page: "https://adonis-singh.github.io/eyebench/", source: "https://adonis-singh.github.io/eyebench/data-frontier.js", top: 10 },
+    links: [],
   },
   {
     id: "trevorswing",

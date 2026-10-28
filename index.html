@@ -29,6 +29,7 @@ try { const t = localStorage.getItem("theme"); if (t) document.documentElement.d
 }
 
 * { box-sizing: border-box; }
+html { --bar: 28px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -52,7 +53,7 @@ a { color: inherit; }
   inset: 0 0 auto 0;
   z-index: 10000;
   display: flex;
-  height: 28px;
+  height: var(--bar);
   margin: 0;
   padding: 0 8px;
   list-style: none;
@@ -61,9 +62,9 @@ a { color: inherit; }
 }
 .menubar a {
   display: block;
-  height: 27px;
+  height: calc(var(--bar) - 1px);
   padding: 0 10px;
-  line-height: 27px;
+  line-height: calc(var(--bar) - 1px);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -73,18 +74,18 @@ a { color: inherit; }
   display: grid;
   place-items: center;
   width: 36px;
-  height: 27px;
+  height: calc(var(--bar) - 1px);
   padding: 0;
   border: 0;
   background: none;
   cursor: default;
 }
 .menubar button svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
-.menubar button:hover, .menubar button:focus-visible, .menubar button:active { background: var(--ink); color: var(--win); outline: none; }
-.menubar a:hover, .menubar a:focus-visible, .menubar a:active { background: var(--ink); color: var(--win); outline: none; }
+.menubar button:focus-visible, .menubar button:active { background: var(--ink); color: var(--win); outline: none; }
+.menubar a:focus-visible, .menubar a:active { background: var(--ink); color: var(--win); outline: none; }
 
 /* Desktop and icons */
-.desk { position: fixed; inset: 28px 0 0 0; overflow: hidden; background: var(--win); }
+.desk { position: fixed; inset: var(--bar) 0 0 0; overflow: hidden; background: var(--win); }
 .picture {
   position: absolute;
   inset: 0;
@@ -108,7 +109,7 @@ a { color: inherit; }
   text-align: center;
   text-decoration: none;
 }
-.about:hover, .about:focus-visible, .about:active { background: var(--ink); color: var(--win); outline: none; }
+.about:focus-visible, .about:active { background: var(--ink); color: var(--win); outline: none; }
 .icons {
   display: flex;
   flex-direction: column;
@@ -150,7 +151,7 @@ a { color: inherit; }
   font-size: 14px;
   line-height: 18px;
   text-align: center;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -224,7 +225,7 @@ a { color: inherit; }
 }
 .index .blurb, .index .year { opacity: 0.55; }
 .index .blurb { grid-column: 1 / -1; }
-.index button:hover, .index button:active { background: var(--ink); color: var(--win); }
+.index button:active { background: var(--ink); color: var(--win); }
 
 /* Get Info and tweets */
 .info {
@@ -240,7 +241,10 @@ a { color: inherit; }
 .tweets { margin: 18px 0 0; padding: 0; list-style: none; }
 .tweets li { display: grid; grid-template-columns: 7.5em 1fr; gap: 12px; }
 .tweets .date { opacity: 0.55; }
-.tweets a:hover, .content p a:hover { background: var(--ink); color: var(--win); text-decoration: none; }
+@media (hover: hover) {
+  .menubar a:hover, .menubar button:hover, .about:hover, .index button:hover { background: var(--ink); color: var(--win); }
+  .tweets a:hover, .content p a:hover { background: var(--ink); color: var(--win); text-decoration: none; }
+}
 
 /* Push buttons */
 .buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
@@ -307,12 +311,12 @@ a { color: inherit; }
 /* Zoom rectangles */
 .zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (max-height: 500px) {
   .menubar { padding: 0; }
   .menubar a { padding: 0 7px; }
   .icons {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
     align-content: start;
     gap: 12px 0;
     height: 100%;
@@ -320,13 +324,28 @@ a { color: inherit; }
     padding: 16px 4px;
   }
   .icon { width: auto; min-width: 0; }
-  .window { inset: 0 !important; width: auto; max-height: none; box-shadow: none; border-width: 0; }
+  .window, .window.wide { inset: 0 !important; width: auto; max-height: none !important; box-shadow: none; border-width: 0; }
   .titlebar { height: 28px; padding: 6px 3px; cursor: default; }
   .close { top: 6px; width: 17px; height: 15px; }
-  .content { flex: 1; padding: 12px 14px 20px; }
+  .content { flex: 1; padding: 12px max(14px, calc((100% - 640px) / 2)) 20px; }
   .scores li { grid-template-columns: 1fr 40px; gap: 0 12px; margin-bottom: 6px; }
   .scores .bar { grid-column: 1 / -1; grid-row: 2; }
   .strip img { width: 78%; }
+}
+@media (max-width: 360px) {
+  .menubar { font-size: 15px; }
+  .menubar a { padding: 0 5px; }
+  .menubar button { width: 28px; }
+}
+/* Fingers need bigger targets than a mouse. */
+@media (pointer: coarse) {
+  html { --bar: 34px; }
+  .close::after { inset: -10px -12px; }
+  .about::after { content: ""; position: absolute; inset: -10px; }
+  .tweets li { padding: 4px 0; }
+  .menubar a { min-width: 36px; text-align: center; }
+  .controls { height: 34px; }
+  .play { width: 44px; height: 33px; }
 }
 </style>
 </head>
@@ -342,7 +361,7 @@ a { color: inherit; }
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const phone = matchMedia("(max-width: 600px)");
+const phone = matchMedia("(max-width: 600px), (max-height: 500px)");
 const PX = 32; // icon art is drawn at 32x32 and shown at 64x64
 
 const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: SITE.contact, art: "doc" };
@@ -558,10 +577,10 @@ function content(item) {
   if (item.video) c.append(player(item.video, item.thumb, item.name));
   if (item.images) {
     const id = item.id + "-images";
-    byId.set(id, { id, name: item.name + " images", pictures: item.images, links: [], wide: true });
     const b = el("button", { className: "composite", type: "button" }, item.images.map(i => el("img", { src: i.src, alt: i.alt })));
+    byId.set(id, { id, name: item.name + " images", pictures: item.images, links: [], wide: true, origin: b });
     b.setAttribute("aria-label", "Open " + item.name + " images");
-    b.addEventListener("click", () => open(id, b));
+    b.addEventListener("click", () => open(id));
     c.append(b);
   }
   if (item.pictures) c.append(el("div", { className: "pictures" }, item.pictures.map(i => el("figure", {}, [el("img", { src: i.src, alt: i.alt }), el("figcaption", { textContent: i.alt })]))));
@@ -581,7 +600,7 @@ function front(w) {
   for (const o of windows.values()) o.classList.toggle("front", o === w);
   w.style.zIndex = ++z;
 }
-function open(id, origin) {
+function open(id) {
   const item = byId.get(id);
   if (!item) return;
   const icon = icons.get(id);
@@ -595,7 +614,7 @@ function open(id, origin) {
   closeBtn.setAttribute("aria-label", "Close");
   const title = el("div", { className: "titlebar" }, [closeBtn, el("h2", { textContent: item.name })]);
   const w = el("section", { className: item.wide ? "window wide" : "window", tabIndex: -1 }, [title, content(item)]);
-  w.origin = icon ? icon.querySelector("canvas") : origin;
+  w.origin = icon ? icon.querySelector("canvas") : item.origin;
   w.setAttribute("aria-label", item.name);
   w.style.visibility = "hidden";
   desk.append(w);
@@ -608,6 +627,7 @@ function open(id, origin) {
   cascade = (cascade + 1) % 8;
   w.style.left = left + "px";
   w.style.top = top + "px";
+  w.style.maxHeight = dr.height - top - 12 + "px";   // content that loads later scrolls instead of running off the bottom
   front(w);
 
   zoom(w.origin.getBoundingClientRect(), w.getBoundingClientRect(), () => {

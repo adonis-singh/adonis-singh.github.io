@@ -333,7 +333,7 @@ a { color: inherit; }
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=bc55dbc1be"></script>
+<script src="projects.js?v=c70abbb5f4"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -341,7 +341,7 @@ const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const phone = matchMedia("(max-width: 600px)");
 const PX = 32; // icon art is drawn at 32x32 and shown at 64x64
 
-const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: [], art: "doc" };
+const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: SITE.contact, art: "doc" };
 const items = [readme, ...PROJECTS];
 const byId = new Map(items.map(p => [p.id, p]));
 const icons = new Map();
@@ -558,7 +558,7 @@ function content(item) {
   if (item.scores) c.append(...scores(item.scores));
   if (item.info) c.append(el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })])));
   if (item.tweets && item.tweets.length) c.append(el("ul", { className: "tweets" }, item.tweets.map(t => el("li", {}, [el("span", { className: "date", textContent: t.date }), ext({ href: t.href, textContent: t.text })]))));
-  if (item.links.length) c.append(el("div", { className: "buttons" }, item.links.map(l => ext({ className: "btn", href: l.href, textContent: l.label }))));
+  if (item.links.length) c.append(el("div", { className: "buttons" }, item.links.map(l => el("a", { className: "btn", href: l.href, textContent: l.label, ...(l.href.startsWith("mailto:") ? {} : { target: "_blank", rel: "noopener" }) }))));
   return c;
 }
 

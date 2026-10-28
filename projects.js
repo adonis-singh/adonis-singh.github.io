@@ -77,10 +77,10 @@ window.SITE = {
       page: "https://commons.wikimedia.org/wiki/File:Ingenuity%27s_First_Black-and-White_Image_From_the_Air.jpg",
     },
   ],
-  // Buttons at the bottom of the Read Me.
+  // Buttons at the bottom of the Read Me. glyph is an icon drawn before the label: "mail" or "x".
   contact: [
-    { label: "getaditya2008@gmail.com", href: "mailto:getaditya2008@gmail.com" },
-    { label: "DM me on X", href: "https://x.com/messages/compose?recipient_id=1591379820658696192" },
+    { label: "Email", glyph: "mail", href: "mailto:getaditya2008@gmail.com" },
+    { label: "DM me", glyph: "x", href: "https://x.com/messages/compose?recipient_id=1591379820658696192" },
   ],
   links: [
     { label: "GitHub", href: "https://github.com/adonis-singh" },

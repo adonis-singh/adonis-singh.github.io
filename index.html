@@ -199,8 +199,10 @@ a { color: inherit; }
   box-shadow: 0 0 0 1px var(--win);
   cursor: default;
 }
+.close::after { content: ""; position: absolute; inset: -5px -8px; }
 .close svg { display: block; width: 7px; height: 7px; margin: auto; shape-rendering: crispEdges; }
-.close:active { background: var(--ink); color: var(--win); }
+.close .burst, .close:active .x { display: none; }
+.close:active .burst { display: block; }
 .window:not(.front) .close { visibility: hidden; }
 .content { overflow: auto; padding: 14px 20px 20px; overscroll-behavior: contain; }
 .content p { margin: 0 0 14px; }
@@ -458,7 +460,9 @@ desk.addEventListener("pointerdown", e => { if (e.target === desk || e.target ==
 function zoom(from, to, done) {
   if (still) return done();
   const steps = 8;
+  let at = 0;
   for (let i = 1; i <= steps; i++) {
+    at += 10 + Math.random() * 26;   // uneven frames, like an old machine struggling to keep up
     const t = i / steps;
     const r = {
       left: from.left + (to.left - from.left) * t,
@@ -471,9 +475,9 @@ function zoom(from, to, done) {
       Object.assign(box.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
       document.body.append(box);
       setTimeout(() => box.remove(), 70);
-    }, i * 18);
+    }, at);
   }
-  setTimeout(done, steps * 18 + 20);
+  setTimeout(done, at + 20);
 }
 
 /* Window content */
@@ -585,7 +589,9 @@ function open(id, origin) {
   history.replaceState(null, "", "#" + id);
   if (windows.has(id)) { const w = windows.get(id); front(w); w.focus(); return; }
 
-  const closeBtn = el("button", { className: "close", type: "button", innerHTML: '<svg viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z" fill="currentColor"/></svg>' });
+  const closeBtn = el("button", { className: "close", type: "button", innerHTML:
+    '<svg class="x" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z" fill="currentColor"/></svg>' +
+    '<svg class="burst" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM1 5h1v1H1zM0 6h1v1H0zM3 0h1v2H3zM3 5h1v2H3zM0 3h2v1H0zM5 3h2v1H5z" fill="currentColor"/></svg>' });
   closeBtn.setAttribute("aria-label", "Close");
   const title = el("div", { className: "titlebar" }, [closeBtn, el("h2", { textContent: item.name })]);
   const w = el("section", { className: item.wide ? "window wide" : "window", tabIndex: -1 }, [title, content(item)]);
@@ -621,12 +627,20 @@ function close(id) {
   const from = w.getBoundingClientRect();
   const back = w.origin.isConnected ? w.origin.getBoundingClientRect() : from;
   for (const v of w.querySelectorAll("video")) v.pause();
-  w.remove();
   windows.delete(id);
-  zoom(from, back, () => {});
+  w.inert = true;
+  // Flicker inverted twice, get repainted away in a few jerky bands, then zoom back to the icon.
+  const frames = still ? [] : [
+    () => w.style.filter = "invert(1)", () => w.style.filter = "", () => w.style.filter = "invert(1)", () => w.style.filter = "",
+    () => w.style.clipPath = "inset(30% 0 0 0)", () => w.style.clipPath = "inset(55% 0 0 0)", () => w.style.clipPath = "inset(85% 0 0 0)",
+  ];
+  let at = 0;
+  for (const f of frames) { at += 25 + Math.random() * 40; setTimeout(f, at); }
+  setTimeout(() => { w.remove(); zoom(from, back, () => {}); }, at + 30);
   const next = [...windows.values()].sort((a, b) => b.style.zIndex - a.style.zIndex)[0];
   if (next) { front(next); history.replaceState(null, "", "#" + [...windows].find(([, v]) => v === next)[0]); }
   else history.replaceState(null, "", location.pathname);
+  w.style.zIndex = ++z;   // stay on top while it flickers out
   if (w.origin.isConnected) (icon || w.origin).focus();
 }
 function drag(w, handle) {

@@ -502,11 +502,10 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   .print { font-family: Georgia, "Times New Roman", serif; font-size: 9.5pt; line-height: 1.35; word-spacing: normal; }
   /* The name and each project's heading in the pixel fonts, at whole multiples of a pixel's size;
      long text in a serif, which reads better on paper at this size than a pixel font. */
-  .print h1 { margin: 0 0 6pt; font: 24pt/30pt "Ark Pixel 16", monospace; word-spacing: -0.125em; }
+  .print h1 { margin: 0 0 6pt; font: 24pt/30pt "Ark Pixel 12 Bold", monospace; word-spacing: -0.125em; }
   .print h2 { display: flex; justify-content: space-between; margin: 0 0 3pt; font: 12pt/15pt "Ark Pixel 12 Bold", monospace; word-spacing: -0.125em; }
   .print section { margin-top: 12pt; padding-top: 6pt; border-top: 1pt solid #000; break-inside: avoid; }
   .print p { margin: 0 0 5pt; }
-  .print .blurb { font-style: italic; }
   .print dl { display: grid; grid-template-columns: 9em 1fr; gap: 0 10pt; margin: 5pt 0 0; }
   .print dt { font-weight: bold; }
   .print dd { margin: 0; }
@@ -1470,7 +1469,6 @@ function printSheet() {
     const links = [...p.links.map(l => [l.label, url(l.href)]), ...(p.scores ? [["Leaderboard", url(p.scores.page)]] : [])];
     sheet.append(el("section", {}, [
       el("h2", {}, [el("span", { textContent: p.name }), el("span", { textContent: p.year })]),
-      el("p", { className: "blurb", textContent: p.blurb }),
       // [text](url) in a paragraph prints as text (url).
       ...p.body.map(t => el("p", { textContent: t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)") })),
       rows([...p.info.map(([k, v]) => [k, v]), ...links]),

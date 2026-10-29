@@ -385,6 +385,7 @@ const el = (tag, props = {}, kids = []) => {
 /* Menu bar */
 const menubar = document.getElementById("menubar");
 const me = el("a", { className: "me", href: "#readme", textContent: SITE.name });
+me.addEventListener("click", e => { e.preventDefault(); open("readme", me); });
 menubar.append(el("li", {}, me));
 const ext = (props) => el("a", { target: "_blank", rel: "noopener", ...props });
 const glyphs = {
@@ -615,18 +616,25 @@ function content(item) {
   return c;
 }
 
-/* Windows */
+/* Windows. Opening one adds a history entry ({ n, id }), so Back closes the front window.
+   The URL's hash always names the front window. */
+let here = 0;       // n of the current history entry
+let stepping = 0;   // steps back that close() asked for and the browser hasn't made yet
+const frontmost = () => [...windows.values()].sort((a, b) => b.style.zIndex - a.style.zIndex)[0];
+const name = w => history.replaceState(history.state, "", w ? "#" + w.dataset.id : location.pathname + location.search);
 function front(w) {
   for (const o of windows.values()) o.classList.toggle("front", o === w);
   w.style.zIndex = ++z;
+  name(w);
 }
-function open(id, opener) {
+// entry is the history entry the window belongs to, when that entry exists already.
+function open(id, opener, entry) {
   const item = byId.get(id);
   if (!item) return;
   const icon = icons.get(id);
   if (icon) select(id);
-  history.replaceState(null, "", "#" + id);
   if (windows.has(id)) { const w = windows.get(id); front(w); w.body.focus(); return; }
+  if (entry === undefined) { history.pushState({ n: ++here, id }, ""); entry = here; }
 
   const closeBtn = el("button", { className: "close", type: "button", innerHTML:
     '<svg class="x" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z" fill="currentColor"/></svg>' +
@@ -635,6 +643,8 @@ function open(id, opener) {
   const title = el("div", { className: "titlebar" }, [closeBtn, el("h2", { textContent: item.name })]);
   const body = content(item);
   const w = el("section", { className: item.wide ? "window wide" : "window", tabIndex: -1 }, [title, body]);
+  w.dataset.id = id;
+  w.entry = entry;
   w.body = body;
   w.opener = opener;
   w.origin = icon ? icon.querySelector("canvas") : item.origin;
@@ -664,7 +674,7 @@ function open(id, opener) {
   closeBtn.addEventListener("click", () => close(id));
   drag(w, title);
 }
-function close(id) {
+function close(id, popped) {
   const w = windows.get(id);
   if (!w) return;
   const icon = icons.get(id);
@@ -691,9 +701,11 @@ function close(id) {
   let at = 0;
   for (const f of frames) { at += 25 + Math.random() * 40; setTimeout(f, at); }
   setTimeout(() => { w.remove(); shield.remove(); zoom(from, back, () => {}); }, at + 30);
-  const next = [...windows.values()].sort((a, b) => b.style.zIndex - a.style.zIndex)[0];
-  if (next) { front(next); history.replaceState(null, "", "#" + [...windows].find(([, v]) => v === next)[0]); }
-  else history.replaceState(null, "", location.pathname);
+  const next = frontmost();
+  if (next) front(next);
+  else name(null);
+  // Closing the window the current entry opened steps back, so Back and Forward stay in step.
+  if (!popped && w.entry === here && here > 0) { here--; stepping++; history.back(); }
   w.style.zIndex = shield.style.zIndex = ++z;   // stay on top while it flickers out
   (opener || (next ? next.body : icon))?.focus();
 }
@@ -724,15 +736,32 @@ document.addEventListener("keydown", e => {
 });
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
-  const top = [...windows].sort(([, a], [, b]) => b.style.zIndex - a.style.zIndex)[0];
-  if (top) close(top[0]);
+  const w = frontmost();
+  if (w) close(w.dataset.id);
 });
-const fromHash = () => { const id = decodeURIComponent(location.hash.slice(1)); if (id) open(id); };
-addEventListener("hashchange", fromHash);
-// Every visit starts with the Read Me open; a project in the URL opens on top of it.
-const start = decodeURIComponent(location.hash.slice(1));
-open("readme");
-if (start) open(start);
+addEventListener("popstate", () => {
+  const s = history.state;
+  if (stepping) stepping--;
+  else if (!s) {   // a #hash typed into the address bar, or a link to one, made a new entry
+    const id = location.hash.slice(1);
+    // An entry that opens no window shares the number of the one before, so Back skips it.
+    history.replaceState({ n: byId.has(id) && !windows.has(id) ? ++here : here, id }, "");
+    open(id, null, here);
+  } else if (s.n < here) {   // Back
+    for (; here > s.n; here--) { const w = frontmost(); if (w) close(w.dataset.id, true); }
+  } else if (s.n > here) {   // Forward
+    here = s.n;
+    open(s.id, null, here);
+  }
+  name(frontmost());
+});
+// Every visit starts with the Read Me open; a window named in the URL opens on top of it.
+// A reload keeps its place in history and adds no entry.
+const start = location.hash.slice(1);
+if (history.state) here = history.state.n;
+else history.replaceState({ n: 0, id: "readme" }, "");
+open("readme", null, here);
+open(start, null, here || undefined);
 
 /* Desktop picture: a random picture, dithered to the desk's own pixels. Every one to three
    minutes, at random, another one slowly dissolves in. */

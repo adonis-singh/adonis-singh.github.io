@@ -7,9 +7,8 @@
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="/media/icons/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/ArkPixel16-Prop-Latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/ArkPixel12-Smear.woff2" as="font" type="font/woff2" crossorigin>
 <script>
 // GitHub Pages serves this page for any missing path, so everything it loads has an absolute path.
 // A theme picked with the menu bar toggle wins over the system's; otherwise the system decides.
@@ -20,88 +19,93 @@ dot();
 addEventListener("resize", dot);
 </script>
 <style>
+/* The home page's fonts, colours, menu bar and push buttons. Ark Pixel 16 only at 16px, Ark Pixel
+   12's bold only at 12px, on even line heights. */
+@font-face { font-family: "Ark Pixel 16"; src: url("/fonts/ArkPixel16-Prop-Latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Ark Pixel 12 Bold"; src: url("/fonts/ArkPixel12-Smear.woff2") format("woff2"); font-display: block; }
 :root {
   --ink: #000;
   --win: #fff;
-  --font: "DotGothic16", monospace;
-  /* The 50% pattern: a 2x2 checker, scaled to two dots. */
-  --checker: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h1v1H0zM1 1h1v1H1z'/%3E%3C/svg%3E") 0 0 / calc(var(--dot) * 2) calc(var(--dot) * 2);
   color-scheme: light;
+  --dot: 1px;
+  --grey: repeating-conic-gradient(var(--ink) 0 25%, var(--win) 0 50%) 0 0 / calc(2 * var(--dot)) calc(2 * var(--dot));
+  --checker: repeating-conic-gradient(#000 0 25%, transparent 0 50%) 0 0 / calc(2 * var(--dot)) calc(2 * var(--dot));   /* as a mask */
+  --btn: var(--btn-l);
+  --btn-on: var(--btn-on-l);
+  --btn-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4z'/%3E%3Cpath fill='white' d='M4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
+  --btn-on-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
+  --btn-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='white' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4z'/%3E%3Cpath fill='black' d='M4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
+  --btn-on-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='white' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ink: #fff;
     --win: #000;
     color-scheme: dark;
+    --btn: var(--btn-d);
+    --btn-on: var(--btn-on-d);
   }
 }
 :root[data-theme="dark"] {
   --ink: #fff;
   --win: #000;
   color-scheme: dark;
+  --btn: var(--btn-d);
+  --btn-on: var(--btn-on-d);
 }
 
 * { box-sizing: border-box; }
-html { --bar: 28px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { --bar: 24px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; cursor: default; }
 html, body { height: 100%; }
 body {
   margin: 0;
   overflow: hidden;
   background: var(--win);
   color: var(--ink);
-  font-family: var(--font);
+  font-family: "Ark Pixel 16", monospace;
   font-size: 16px;
-  line-height: 1.75;
+  line-height: 24px;
+  word-spacing: -2px;
   -webkit-font-smoothing: none;
   -webkit-tap-highlight-color: transparent;
 }
 ::selection { background: var(--ink); color: var(--win); }
-button { font: inherit; color: inherit; }
-a { color: inherit; }
-:focus-visible { outline: 1px dotted var(--ink); outline-offset: 2px; }
+button { font: inherit; color: inherit; word-spacing: inherit; cursor: inherit; }
+a { color: inherit; cursor: inherit; }
+/* Nothing reacts to hover. Things invert while pressed, and keyboard focus inverts them too. */
+:focus-visible { outline: none; }
 
-/* Menu bar, as on the home page */
+/* Menu bar: the name on the left, which goes home; GitHub, X and the light/dark toggle on the right */
 .menubar {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 1;
   display: flex;
   height: var(--bar);
-  margin: 0;
   padding: 0 8px;
-  list-style: none;
   background: var(--win);
   border-bottom: 1px solid var(--ink);
+  font-family: "Ark Pixel 12 Bold", monospace;
+  font-size: 12px;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .menubar a {
   display: block;
   height: calc(var(--bar) - 1px);
-  padding: 0 10px;
-  line-height: calc(var(--bar) - 1px);
+  padding: 0 8px;
+  line-height: calc(var(--bar) - 2px);
   text-decoration: none;
   white-space: nowrap;
 }
-.menubar .me { -webkit-text-stroke: 0.5px currentColor; }
-.menubar .theme { margin-left: auto; }
-.menubar button {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: calc(var(--bar) - 1px);
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: default;
-}
-.menubar button svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
-.menubar a:focus-visible, .menubar a:active, .menubar button:focus-visible, .menubar button:active { background: var(--ink); color: var(--win); outline: none; }
-@media (hover: hover) {
-  .menubar a:hover, .menubar button:hover { background: var(--ink); color: var(--win); }
-}
+.menubar span { position: relative; }
+.extras { display: flex; margin-left: auto; }
+.theme { display: grid; place-items: center; width: 36px; height: calc(var(--bar) - 1px); padding: 0; border: 0; background: none; }
+.theme svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
+.menubar a:active, .menubar a:focus-visible, .theme:active, .theme:focus-visible { background: var(--ink); color: var(--win); }
 
 /* The desk, in the 50% pattern. The alert sits a quarter of the way down, on whole pixels so its lines stay sharp. */
-.desk { position: fixed; inset: var(--bar) 0 0 0; }
-.desk::before { content: ""; position: absolute; inset: 0; image-rendering: pixelated; background: var(--ink); -webkit-mask: var(--checker); mask: var(--checker); }
+.desk { position: fixed; inset: var(--bar) 0 0 0; background: var(--grey); }
 
 /* The alert: a 1px frame, 2px of paper, and a 2px frame inside it */
 .alert {
@@ -117,54 +121,56 @@ a { color: inherit; }
   display: grid;
   grid-template-columns: 64px 1fr;
   gap: 0 20px;
-  padding: 16px 16px 14px;
+  padding: 16px;
   border: 2px solid var(--ink);
 }
 .bomb { grid-row: span 2; display: block; width: 64px; height: 64px; shape-rendering: crispEdges; }
-.alert h1, .alert p { margin: 0; font-size: inherit; font-weight: normal; line-height: 1.5; }
+.alert h1, .alert p { margin: 0; font: inherit; }
 .alert h1 { align-self: end; }
-.buttons { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 18px; }
+.buttons { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 16px; }
 
-/* Push buttons with stepped corners. Each layer is the one inside it grown by a pixel or so; the
-   corner shapes are made by stairs() below. The default button has the thick ring around it. */
+/* Push buttons: a 1px frame with stepped corners, filled while pressed. The default button has a
+   thick ring with stepped corners around it; a dimmed one shows its name through the 50% pattern. */
 .btn {
   display: block;
-  padding: 1px;
-  border: 0;
-  background: var(--ink);
-  clip-path: var(--stairs-4);
+  min-width: 88px;
+  padding: 1px 11px;
+  border: 1px solid transparent;
+  border-image: var(--btn) 6 fill / 6px;
+  background: none;
+  font-family: "Ark Pixel 12 Bold", monospace;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
   text-decoration: none;
-  cursor: default;
+  white-space: nowrap;
 }
-.btn > span { display: block; min-width: 86px; padding: 1px 14px; background: var(--win); clip-path: var(--stairs-3); text-align: center; }
-.btn:active > span { background: var(--ink); color: var(--win); }
-.btn:focus-visible { outline: none; }
-.btn:focus-visible span { text-decoration: underline; }
+.btn span { position: relative; }
+.btn:active, .btn:focus-visible { border-image-source: var(--btn-on); color: var(--win); }
 .default { padding: 3px; background: var(--ink); clip-path: var(--stairs-7); }
 .default > span { display: block; padding: 1px; background: var(--win); clip-path: var(--stairs-5); }
-/* A dimmed button: its name shows through the 50% pattern, as on the original. */
-.btn:disabled span span { image-rendering: pixelated; -webkit-mask: var(--checker); mask: var(--checker); }
-.btn:disabled:active > span { background: var(--win); color: inherit; }
+.btn:disabled span { -webkit-mask: var(--checker); mask: var(--checker); }
+.btn:disabled:active { border-image-source: var(--btn); color: inherit; }
 
 @media (max-width: 600px), (max-height: 500px) {
   .menubar { padding: 0; }
-  .menubar a { padding: 0 7px; }
 }
 @media (max-width: 360px) {
-  .menubar { font-size: 15px; }
-  .menubar a { padding: 0 5px; }
-  .menubar button { width: 28px; }
-  .alert > div { gap: 0 14px; padding: 14px 12px 12px; }
+  .menubar a { padding: 0 6px; }
+  .theme { width: 32px; }
+  .alert > div { gap: 0 12px; padding: 12px; }
 }
+/* Fingers need bigger targets than a mouse. */
 @media (pointer: coarse) {
   html { --bar: 34px; }
-  .menubar a { min-width: 36px; text-align: center; }
+  .menubar a:not(.me) { min-width: 36px; text-align: center; }
+  .btn { line-height: 28px; }
 }
 </style>
 </head>
 <body>
 
-<nav aria-label="Menu bar"><ul class="menubar" id="menubar"></ul></nav>
+<nav class="menubar" id="menubar" aria-label="Menu bar"></nav>
 <main class="desk">
   <div class="alert">
     <div>
@@ -173,7 +179,7 @@ a { color: inherit; }
       <p>ID = 404</p>
       <div class="buttons">
         <span class="default"><span><a class="btn" href="/"><span>Restart</span></a></span></span>
-        <button class="btn" type="button" disabled><span><span>Resume</span></span></button>
+        <button class="btn" type="button" disabled><span>Resume</span></button>
       </div>
     </div>
   </div>
@@ -186,9 +192,19 @@ const el = (tag, props = {}, kids = []) => {
   for (const k of [].concat(kids)) n.append(k);
   return n;
 };
+// Pixel fonts blur off whole screen pixels. Centred text often lands between two, so it is
+// nudged left onto one.
+const snap = (n) => {
+  n.style.left = "";
+  const f = n.getBoundingClientRect().x * devicePixelRatio % 1;
+  if (f) n.style.left = -f / devicePixelRatio + "px";
+};
+const snapAll = () => document.querySelectorAll(".btn span, .menubar span").forEach(snap);
+Promise.all([...document.fonts].map(f => f.load())).then(snapAll);
+addEventListener("resize", snapAll);
 
-// A rounded rectangle with stepped corners, as a clip-path. insets[k] is how far row k from
-// the top (and from the bottom) starts in from each side.
+// The default button's ring: a rounded rectangle with stepped corners, as a clip-path. insets[k]
+// is how far row k from the top (and from the bottom) starts in from each side.
 function stairs(insets) {
   const L = [...insets, 0];
   const corner = [[L[0], 0]];
@@ -203,8 +219,6 @@ function stairs(insets) {
   return `polygon(${pts.map(p => p.join(" ")).join(", ")})`;
 }
 const root = document.documentElement.style;
-root.setProperty("--stairs-3", stairs([3, 1, 1]));
-root.setProperty("--stairs-4", stairs([4, 2, 1, 1]));
 root.setProperty("--stairs-5", stairs([5, 3, 2, 1, 1]));
 root.setProperty("--stairs-7", stairs([7, 5, 3, 2, 2, 1, 1]));
 
@@ -246,13 +260,14 @@ const BOMB = [
 document.getElementById("bomb").innerHTML = `<path fill="currentColor" d="${BOMB.map((row, y) =>
   [...row.matchAll(/#+/g)].map(m => `M${m.index} ${y}h${m[0].length}v1h-${m[0].length}z`).join("")).join("")}"/>`;
 
-/* Menu bar */
+/* Menu bar, like the home page's: the name goes home, and the links marked bar sit at the right. */
 const menubar = document.getElementById("menubar");
-menubar.append(el("li", {}, el("a", { className: "me", href: "/", textContent: SITE.name })));
-for (const l of SITE.links) menubar.append(el("li", {}, el("a", { href: l.href, textContent: l.label, target: "_blank", rel: "noopener" })));
+menubar.append(el("a", { className: "me", href: "/" }, el("span", { textContent: SITE.name })));
+const extras = el("div", { className: "extras" });
+for (const l of SITE.links.filter(l => l.bar)) extras.append(el("a", { href: l.href, target: "_blank", rel: "noopener" }, el("span", { textContent: l.label })));
 const systemDark = matchMedia("(prefers-color-scheme: dark)");
 const isDark = () => (document.documentElement.dataset.theme || (systemDark.matches ? "dark" : "light")) === "dark";
-const themeBtn = el("button", { type: "button", innerHTML: '<svg viewBox="0 0 13 13"><path d="M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2h-1zM0 4h1v5H0zM12 4h1v5h-1zM1 9h1v2H1zM11 9h1v2h-1zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM6 1h1v11H6zM4 1h2v11H4zM2 2h2v9H2zM1 4h1v5H1z" fill="currentColor"/></svg>' });
+const themeBtn = el("button", { type: "button", className: "theme", innerHTML: '<svg viewBox="0 0 13 13"><path d="M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2h-1zM0 4h1v5H0zM12 4h1v5h-1zM1 9h1v2H1zM11 9h1v2h-1zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM6 1h1v11H6zM4 1h2v11H4zM2 2h2v9H2zM1 4h1v5H1z" fill="currentColor"/></svg>' });
 const labelTheme = () => {
   const next = isDark() ? "Light mode" : "Dark mode";
   themeBtn.setAttribute("aria-label", next);
@@ -265,7 +280,8 @@ themeBtn.addEventListener("click", () => {
   labelTheme();
 });
 systemDark.addEventListener("change", labelTheme);
-menubar.append(el("li", { className: "theme" }, themeBtn));
+extras.append(themeBtn);
+menubar.append(extras);
 labelTheme();
 
 // Return restarts, as the outlined button says.

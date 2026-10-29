@@ -6,8 +6,8 @@
 //   blurb   one line, for the Read Me index
 //   body    paragraphs for the full view; [text](url) makes a link
 //   label   optional short name for icons, when name is too long
-//   icon    32x32 pixel icon (media/icons/), pure black and white; without one, a drawn disc
-//   iconColor true if the icon is in colour, so dark mode leaves it as drawn instead of inverting it
+//   icon    32x32 1-bit icon (media/icons/), black on white, transparent outside; the same name
+//           with -selected and -open is the icon selected and with its window open
 //   info    [label, value] rows for the Get Info panel
 //   tweets  [{ date, text, href }] links to tweets about the project
 //   thumb   poster frame for the video
@@ -90,10 +90,9 @@ window.SITE = {
     { label: "Email", glyph: "mail", href: "mailto:getaditya2008@gmail.com" },
     { label: "DM me", menu: "Message on X", glyph: "x", href: "https://x.com/messages/compose?recipient_id=1591379820658696192" },
   ],
-  // Items at the end of the Adi Singh menu. bar puts the link on the menu bar too, at the right:
-  // true always, "wide" only on screens 360px wide or more.
+  // Items at the end of the Adi Singh menu. bar: true puts the link on the menu bar too, at the right.
   links: [
-    { label: "GitHub", href: "https://github.com/adonis-singh", bar: "wide" },
+    { label: "GitHub", href: "https://github.com/adonis-singh", bar: true },
     { label: "X", href: "https://x.com/adonis_singh", bar: true },
     { label: "Buy me a coffee", href: "https://buymeacoffee.com/adonis_singh" },
   ],
@@ -110,7 +109,6 @@ window.PROJECTS = [
       "It started from a conversation with [Aidan McLau](https://x.com/aidan_mclau), who helped bring the team together. A group of volunteers built it. It's offline now, but the code is still up.",
     ],
     icon: "media/icons/mcbench.png",
-    iconColor: true,
     info: [
       ["Started", "October 2024"],
       ["Site", "mcbench.ai, offline"],
@@ -190,6 +188,7 @@ window.PROJECTS = [
       "A full decompilation of a Resident Evil 4 prototype for GameCube, dated November 25, 2004. Its discs came with symbol files that name every function. The result is 570,000 lines of C and C++ that, built with the compilers Capcom used, produce the original game files byte for byte.",
     ],
     label: "RE4 decomp",
+    icon: "media/icons/re4.png",
     info: [
       ["Build", "G4BE08, debug, November 25, 2004"],
       ["Source", "570,000 lines of C and C++"],

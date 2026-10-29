@@ -18,50 +18,96 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="media/icons/favicon.png">
 <link rel="apple-touch-icon" href="media/icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/ArkPixel16-Prop-Latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ArkPixel12-Smear.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ArkPixel12-Prop-Latin.woff2" as="font" type="font/woff2" crossorigin>
 <script>
 // A theme picked with the menu bar toggle wins over the system's; otherwise the system decides.
 try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
 </script>
 <style>
+/* Ark Pixel (OFL, fonts/ArkPixel-OFL.txt), Latin subsets. Each face is drawn on a pixel grid and
+   stays crisp only at its own size: Ark Pixel 16 at 16px, Ark Pixel 12 and its smeared bold at 12px.
+   Line heights stay even, so the glyphs sit on whole pixels. */
+@font-face { font-family: "Ark Pixel 16"; src: url("fonts/ArkPixel16-Prop-Latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Ark Pixel 12 Bold"; src: url("fonts/ArkPixel12-Smear.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Ark Pixel 12"; src: url("fonts/ArkPixel12-Prop-Latin.woff2") format("woff2"); font-display: block; }
+
+/* Two colours, ink and paper. Pictures drawn as images (push button frames, scroll arrows) can't
+   read var(--ink), so each comes in a light (-l) and a dark (-d) version. */
 :root {
   --ink: #000;
   --win: #fff;
+  --invert: none;   /* for 1-bit images drawn in black on white */
   color-scheme: light;
+  --dot: 1px;       /* one dot of the 50% pattern; the script sets it to whole screen pixels */
+  --grey: repeating-conic-gradient(var(--ink) 0 25%, var(--win) 0 50%) 0 0 / calc(2 * var(--dot)) calc(2 * var(--dot));
+  --btn: var(--btn-l);
+  --btn-on: var(--btn-on-l);
+  --sb-up: var(--sb-up-l);
+  --sb-up-on: var(--sb-up-on-l);
+  --sb-down: var(--sb-down-l);
+  --sb-down-on: var(--sb-down-on-l);
+  --btn-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4z'/%3E%3Cpath fill='white' d='M4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
+  --btn-on-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
+  --sb-up-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath fill='white' d='M1 0h15v15H1z'/%3E%3Cpath fill='black' d='M0 0h1v15H0zM0 15h16v1H0zM8 3h1v1H8zM7 4h1v1H7zM9 4h1v1H9zM6 5h1v1H6zM10 5h1v1H10zM5 6h1v1H5zM11 6h1v1H11zM4 7h1v1H4zM12 7h1v1H12zM3 8h4v1H3zM10 8h4v1H10zM6 9h1v3H6zM10 9h1v3H10zM6 12h5v1H6z'/%3E%3C/svg%3E");
+  --sb-up-on-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath fill='white' d='M1 0h15v15H1z'/%3E%3Cpath fill='black' d='M0 0h1v15H0zM0 15h16v1H0zM8 3h1v1H8zM7 4h3v1H7zM6 5h5v1H6zM5 6h7v1H5zM4 7h9v1H4zM3 8h11v1H3zM6 9h5v4H6z'/%3E%3C/svg%3E");
+  --sb-down-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath fill='white' d='M1 1h15v15H1z'/%3E%3Cpath fill='black' d='M0 0h16v1H0zM0 1h1v15H0zM6 3h5v1H6zM6 4h1v3H6zM10 4h1v3H10zM3 7h4v1H3zM10 7h4v1H10zM4 8h1v1H4zM12 8h1v1H12zM5 9h1v1H5zM11 9h1v1H11zM6 10h1v1H6zM10 10h1v1H10zM7 11h1v1H7zM9 11h1v1H9zM8 12h1v1H8z'/%3E%3C/svg%3E");
+  --sb-down-on-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath fill='white' d='M1 1h15v15H1z'/%3E%3Cpath fill='black' d='M0 0h16v1H0zM0 1h1v15H0zM6 3h5v4H6zM3 7h11v1H3zM4 8h9v1H4zM5 9h7v1H5zM6 10h5v1H6zM7 11h3v1H7zM8 12h1v1H8z'/%3E%3C/svg%3E");
+  --btn-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='white' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4z'/%3E%3Cpath fill='black' d='M4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
+  --btn-on-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='white' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
+  --sb-up-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M1 0h15v15H1z'/%3E%3Cpath fill='white' d='M0 0h1v15H0zM0 15h16v1H0zM8 3h1v1H8zM7 4h1v1H7zM9 4h1v1H9zM6 5h1v1H6zM10 5h1v1H10zM5 6h1v1H5zM11 6h1v1H11zM4 7h1v1H4zM12 7h1v1H12zM3 8h4v1H3zM10 8h4v1H10zM6 9h1v3H6zM10 9h1v3H10zM6 12h5v1H6z'/%3E%3C/svg%3E");
+  --sb-up-on-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M1 0h15v15H1z'/%3E%3Cpath fill='white' d='M0 0h1v15H0zM0 15h16v1H0zM8 3h1v1H8zM7 4h3v1H7zM6 5h5v1H6zM5 6h7v1H5zM4 7h9v1H4zM3 8h11v1H3zM6 9h5v4H6z'/%3E%3C/svg%3E");
+  --sb-down-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M1 1h15v15H1z'/%3E%3Cpath fill='white' d='M0 0h16v1H0zM0 1h1v15H0zM6 3h5v1H6zM6 4h1v3H6zM10 4h1v3H10zM3 7h4v1H3zM10 7h4v1H10zM4 8h1v1H4zM12 8h1v1H12zM5 9h1v1H5zM11 9h1v1H11zM6 10h1v1H6zM10 10h1v1H10zM7 11h1v1H7zM9 11h1v1H9zM8 12h1v1H8z'/%3E%3C/svg%3E");
+  --sb-down-on-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M1 1h15v15H1z'/%3E%3Cpath fill='white' d='M0 0h16v1H0zM0 1h1v15H0zM6 3h5v4H6zM3 7h11v1H3zM4 8h9v1H4zM5 9h7v1H5zM6 10h5v1H6zM7 11h3v1H7zM8 12h1v1H8z'/%3E%3C/svg%3E");
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ink: #fff;
     --win: #000;
+    --invert: invert(1);
     color-scheme: dark;
+    --btn: var(--btn-d);
+    --btn-on: var(--btn-on-d);
+    --sb-up: var(--sb-up-d);
+    --sb-up-on: var(--sb-up-on-d);
+    --sb-down: var(--sb-down-d);
+    --sb-down-on: var(--sb-down-on-d);
   }
 }
 :root[data-theme="dark"] {
   --ink: #fff;
   --win: #000;
+  --invert: invert(1);
   color-scheme: dark;
+  --btn: var(--btn-d);
+  --btn-on: var(--btn-on-d);
+  --sb-up: var(--sb-up-d);
+  --sb-up-on: var(--sb-up-on-d);
+  --sb-down: var(--sb-down-d);
+  --sb-down-on: var(--sb-down-on-d);
 }
 
 * { box-sizing: border-box; }
-html { --bar: 28px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
+html { --bar: 24px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; cursor: default; }
 html, body { height: 100%; }
 body {
   margin: 0;
   overflow: hidden;
   background: var(--win);
   color: var(--ink);
-  font-family: "DotGothic16", monospace;
+  font-family: "Ark Pixel 16", monospace;
   font-size: 16px;
-  line-height: 1.75;
+  line-height: 24px;
+  word-spacing: -2px;
   -webkit-font-smoothing: none;
   -webkit-tap-highlight-color: transparent;
 }
 ::selection { background: var(--ink); color: var(--win); }
-button { font: inherit; color: inherit; }
-a { color: inherit; }
-:focus-visible { outline: 1px dotted var(--ink); outline-offset: 2px; }
+button { font: inherit; color: inherit; word-spacing: inherit; cursor: inherit; }
+a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+/* Nothing reacts to hover. Things invert while pressed, and keyboard focus inverts them too. */
+:focus-visible { outline: none; }
 
 /* Menu bar: pull-down menus on the left; GitHub, X and the light/dark toggle on the right */
 .menubar {
@@ -75,25 +121,25 @@ a { color: inherit; }
   border-bottom: 1px solid var(--ink);
   user-select: none;
   -webkit-user-select: none;
+  font-family: "Ark Pixel 12 Bold", monospace;
+  font-size: 12px;
 }
 .menus { display: flex; margin: 0; padding: 0; list-style: none; }
 .menus > li { position: relative; }
 .title, .menubar .link {
   display: block;
   height: calc(var(--bar) - 1px);
-  padding: 0 10px;
+  padding: 0 8px;
   border: 0;
   background: none;
-  line-height: calc(var(--bar) - 1px);
+  line-height: calc(var(--bar) - 2px);
   text-decoration: none;
   white-space: nowrap;
-  cursor: default;
   -webkit-touch-callout: none;
 }
-.menubar .me { -webkit-text-stroke: 0.5px currentColor; }
-.title[aria-expanded="true"], .menubar .link:active { background: var(--ink); color: var(--win); }
-.title:focus-visible, .menubar .link:focus-visible { outline-offset: -4px; }
-.title[aria-expanded="true"]:focus-visible { outline-color: var(--win); }
+/* An open menu's title is inverted, and so is anything pressed or focused from the keyboard. */
+.menubar span { position: relative; }
+.title[aria-expanded="true"], .title:focus-visible, .menubar .link:active, .menubar .link:focus-visible { background: var(--ink); color: var(--win); }
 .extras { display: flex; margin-left: auto; }
 .theme {
   display: grid;
@@ -103,11 +149,11 @@ a { color: inherit; }
   padding: 0;
   border: 0;
   background: none;
-  cursor: default;
 }
 .theme svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
-.theme:focus-visible, .theme:active { background: var(--ink); color: var(--win); outline: none; }
-/* A menu hangs from its title, its top edge on the bar's bottom line. */
+.theme:active, .theme:focus-visible { background: var(--ink); color: var(--win); }
+/* A menu hangs from its title, its top edge on the bar's bottom line. Items invert while the
+   pointer or the keys are on them. A separator is a row of the 50% pattern. */
 .menu {
   position: absolute;
   top: 100%;
@@ -126,18 +172,18 @@ a { color: inherit; }
   justify-content: space-between;
   gap: 32px;
   padding: 0 16px;
-  line-height: 22px;
+  line-height: 20px;
   text-decoration: none;
-  cursor: default;
   -webkit-touch-callout: none;
 }
 .menu a.on { background: var(--ink); color: var(--win); }
-.menu a:focus-visible { outline: none; }   /* the highlight shows where the keys are */
-.menu [role="separator"] { height: 9px; background: repeating-linear-gradient(to right, var(--ink) 0 1px, transparent 1px 2px) 0 4px / 100% 1px no-repeat; }
+.menu [role="separator"] { padding: 4px 0 3px; }
+.menu [role="separator"]::after { content: ""; display: block; height: 1px; background: var(--grey); }
 .menushield { position: fixed; inset: 0; z-index: 9998; }   /* takes the click that closes a menu */
 
-/* Desktop and icons */
-.desk { position: fixed; inset: var(--bar) 0 0 0; overflow: clip; background: var(--win); }   /* clip, so focus never scrolls the desk */
+/* Desktop and icons. The desk is the 50% pattern until the first picture dissolves in over it. */
+.desk { position: fixed; inset: var(--bar) 0 0 0; overflow: clip; background: var(--grey); }   /* clip, so focus never scrolls the desk */
+.desk.drawn { background: var(--win); }
 .picture {
   position: absolute;
   left: 0;
@@ -151,7 +197,7 @@ a { color: inherit; }
   flex-direction: column;
   flex-wrap: wrap-reverse;
   align-content: flex-start;
-  gap: 4px 8px;
+  gap: 8px;
   height: 100%;
   margin: 0;
   padding: 16px 12px 44px;
@@ -162,30 +208,27 @@ a { color: inherit; }
   flex-direction: column;
   align-items: center;
   width: 104px;
-  height: 118px;
+  height: 108px;
   padding: 4px 0;
   border: 0;
   background: none;
-  cursor: default;
   touch-action: manipulation;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .icon canvas:not(.color) { filter: invert(1); }
-}
-:root[data-theme="dark"] .icon canvas:not(.color) { filter: invert(1); }
-.icon canvas {
-  display: block;
-  width: 64px;
-  height: 64px;
-  image-rendering: pixelated;
-}
+/* Icon art is 32x32, 1-bit, shown at 64x64. Selected and open icons have their own art. */
+.art { position: relative; flex: none; width: 64px; height: 64px; }
+.art img { position: absolute; inset: 0; display: none; width: 100%; height: 100%; image-rendering: pixelated; filter: var(--invert); }
+.art .base { display: block; }
+.icon.selected:not(.open) .base, .icon:focus-visible:not(.open) .base, .icon.open .base { display: none; }
+.icon.selected:not(.open) .chosen, .icon:focus-visible:not(.open) .chosen, .icon.open .opened { display: block; }
 .icon .label {
+  position: relative;
   max-width: 100%;
   margin-top: 4px;
   padding: 0 4px;
   background: var(--win);
-  font-size: 14px;
-  line-height: 18px;
+  font-family: "Ark Pixel 12", monospace;
+  font-size: 12px;
+  line-height: 16px;
   text-align: center;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -193,8 +236,7 @@ a { color: inherit; }
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
-.icon.selected .label { background: var(--ink); color: var(--win); }
-
+.icon.selected .label, .icon:focus-visible .label { background: var(--ink); color: var(--win); }
 
 /* Windows */
 .window {
@@ -205,111 +247,106 @@ a { color: inherit; }
   max-height: calc(100% - 24px);
   background: var(--win);
   border: 1px solid var(--ink);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 1px 1px 0 var(--ink);
 }
+/* Six stripes with paper above and below, the title in a gap, and an 11x11 close box. */
 .titlebar {
   position: relative;
   display: flex;
   justify-content: center;
   flex: none;
   height: 22px;
-  padding: 4px 3px;
+  padding: 5px 1px 4px;
   border-bottom: 1px solid var(--ink);
-  font-size: 16px;
-  line-height: 13px;
-  cursor: grab;
+  font-family: "Ark Pixel 12 Bold", monospace;
+  font-size: 12px;
+  line-height: 12px;
   touch-action: none;
   user-select: none;
 }
 .window.front .titlebar { background: repeating-linear-gradient(to bottom, var(--ink) 0 1px, var(--win) 1px 2px) content-box; }
-.titlebar h2 { margin: 0; padding: 0 8px; background: var(--win); font-size: inherit; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titlebar h2 { position: relative; margin: -2px 0; padding: 0 8px; background: var(--win); font: inherit; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* taller than the stripes, for descenders */
 .close {
   position: absolute;
   left: 8px;
-  top: 4px;
-  width: 15px;
-  height: 13px;
+  top: 5px;
+  width: 11px;
+  height: 11px;
   padding: 0;
   border: 1px solid var(--ink);
   background: var(--win);
   color: var(--ink);
   box-shadow: 0 0 0 1px var(--win);
-  cursor: default;
 }
-.close::after { content: ""; position: absolute; inset: -5px -8px; }
-.close svg { display: block; width: 7px; height: 7px; margin: auto; shape-rendering: crispEdges; }
-.close .burst, .close:active .x { display: none; }
-.close:active .burst { display: block; }
+.close::after { content: ""; position: absolute; inset: -6px -10px; }
+.close svg { display: none; width: 7px; height: 7px; margin: auto; shape-rendering: crispEdges; }
+.close:active svg { display: block; }
+.close:focus-visible { background: var(--ink); color: var(--win); }
 .window:not(.front) .close { visibility: hidden; }
-.content { overflow: auto; padding: 14px 20px 20px; overscroll-behavior: contain; }
+.content { overflow: auto; padding: 12px 16px 16px; overscroll-behavior: contain; }
 .window:focus, .content:focus { outline: none; }   /* the striped title bar marks the active window */
-.content p { margin: 0 0 14px; }
+.content p { margin: 0 0 12px; }
 .content > :last-child { margin-bottom: 0; }
+.content a:not(.btn):active, .content a:not(.btn):focus-visible { background: var(--ink); color: var(--win); text-decoration: none; }
 
-/* Project index in the Read Me */
-.index { margin: 18px 0 0; padding: 0; list-style: none; border: 1px solid var(--ink); }
+/* Project index in the Read Me: the name and year in bold, the line about it below. */
+.index { margin: 16px 0 0; padding: 0; list-style: none; border: 1px solid var(--ink); }
 .index li + li { border-top: 1px solid var(--ink); }
 .index button {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0 14px;
+  gap: 0 12px;
   width: 100%;
-  padding: 5px 10px 6px;
+  padding: 4px 8px;
   border: 0;
   background: none;
+  line-height: 20px;
   text-align: left;
-  cursor: default;
 }
-.index .blurb, .index .year { opacity: 0.55; }
+.index .name, .index .year { font-family: "Ark Pixel 12 Bold", monospace; font-size: 12px; }
 .index .blurb { grid-column: 1 / -1; }
-.index button:active { background: var(--ink); color: var(--win); }
+.index button:active, .index button:focus-visible { background: var(--ink); color: var(--win); }
 
-/* Get Info and tweets */
-.info {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 2px 14px;
-  margin: 18px 0 0;
-  padding: 10px 12px;
-  border: 1px solid var(--ink);
-}
-.info dt { text-align: right; opacity: 0.55; }
+/* Get Info: the icon and name, a rule, then the rows with their labels right-aligned. */
+.getinfo { margin: 16px 0 0; border: 1px solid var(--ink); }
+.getinfo .head { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--ink); font-family: "Ark Pixel 12 Bold", monospace; font-size: 12px; line-height: 16px; }
+.getinfo .head img { flex: none; width: 32px; height: 32px; image-rendering: pixelated; filter: var(--invert); }
+.info { display: grid; grid-template-columns: max-content 1fr; align-items: baseline; gap: 0 12px; margin: 0; padding: 8px 12px; line-height: 20px; }
+.info dt { text-align: right; font-family: "Ark Pixel 12 Bold", monospace; font-size: 12px; }
+.info dt::after { content: ":"; }
 .info dd { margin: 0; }
-.tweets { margin: 18px 0 0; padding: 0; list-style: none; }
-.tweets li { display: grid; grid-template-columns: 7.5em 1fr; gap: 12px; }
-.tweets .date { opacity: 0.55; }
-@media (hover: hover) {
-  .menubar .link:hover, .theme:hover, .index button:hover { background: var(--ink); color: var(--win); }
-  .tweets a:hover, .content p a:hover { background: var(--ink); color: var(--win); text-decoration: none; }
-}
+.tweets { margin: 16px 0 0; padding: 0; list-style: none; line-height: 20px; }
+.tweets li { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
+.tweets li + li { margin-top: 4px; }
 
-/* Push buttons */
-.buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+/* Push buttons: a 1px frame with stepped corners, filled while pressed. */
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
 .btn {
   display: inline-block;
   min-width: 88px;
-  padding: 2px 14px;
-  border: 1px solid var(--ink);
-  border-radius: 7px;
-  box-shadow: 0 0 0 1px var(--ink) inset;
-  background: var(--win);
+  padding: 1px 11px;
+  border: 1px solid transparent;
+  border-image: var(--btn) 6 fill / 6px;
+  background: none;
+  font-family: "Ark Pixel 12 Bold", monospace;
+  font-size: 12px;
+  line-height: 20px;
   text-align: center;
   text-decoration: none;
+  white-space: nowrap;
 }
-.btn:active { background: var(--ink); color: var(--win); }
-.btn svg { width: 14px; height: 14px; margin-right: 7px; vertical-align: -2px; fill: currentColor; }
-.btn .flap { stroke: var(--win); }
-.btn:active .flap { stroke: var(--ink); }
+.btn:active, .btn:focus-visible { border-image-source: var(--btn-on); color: var(--win); }
+.btn span { position: relative; }
+.btn svg { margin-right: 8px; fill: currentColor; shape-rendering: crispEdges; }
 
 /* Scores */
-.scores { margin: 4px 0 0; padding: 0; list-style: none; }
-.scores li { display: grid; grid-template-columns: 190px 1fr 40px; gap: 12px; align-items: center; }
-.scores .effort { opacity: 0.55; }
+.scores { margin: 4px 0 0; padding: 0; list-style: none; line-height: 20px; }
+.scores li { display: grid; grid-template-columns: 200px 1fr 40px; gap: 12px; align-items: center; }
+.scores li + li { margin-top: 4px; }
 .scores .bar { display: block; height: 12px; border: 1px solid var(--ink); }
 .scores .bar span { display: block; height: 100%; background: var(--ink); }
 .scores .n { text-align: right; }
 .content .updated { margin-top: 12px; }
-.content .updated span { opacity: 0.55; }
 
 /* Image composite, and the window it opens */
 .composite {
@@ -317,66 +354,85 @@ a { color: inherit; }
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   width: 100%;
-  margin: 4px 0 14px;
+  margin: 4px 0 12px;
   padding: 0;
   border: 1px solid var(--ink);
   background: var(--ink);
   gap: 1px;
-  cursor: zoom-in;
 }
 .composite img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #fff; }
-.composite:active { filter: invert(1); }
+.composite:active, .composite:focus-visible { filter: invert(1); }
 .window.wide { width: min(880px, calc(100vw - 24px)); }
-.pictures { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pictures { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .pictures figure { margin: 0; }
 .pictures figure:first-child { grid-column: 1 / -1; }
 .pictures img { display: block; width: 100%; height: auto; border: 1px solid var(--ink); }
-.pictures figcaption { margin-top: 4px; opacity: 0.55; }
+.pictures figcaption { margin-top: 4px; }
 
 /* Movie player */
-.player { margin: 4px 0 14px; border: 1px solid var(--ink); }
+.player { margin: 4px 0 12px; border: 1px solid var(--ink); }
 .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
-.controls { display: flex; align-items: center; gap: 8px; height: 22px; padding: 0 6px 0 0; border-top: 1px solid var(--ink); }
-.play, .step { display: grid; place-items: center; flex: none; width: 28px; height: 21px; padding: 0; border: 0; border-right: 1px solid var(--ink); background: var(--win); cursor: default; }
-.play:active, .step:active { background: var(--ink); color: var(--win); }
+.controls { display: flex; align-items: center; gap: 8px; height: 25px; padding: 0 8px 0 0; border-top: 1px solid var(--ink); }
+.play, .step { display: grid; place-items: center; flex: none; width: 32px; height: 24px; padding: 0; border: 0; border-right: 1px solid var(--ink); background: var(--win); }
+.play:active, .play:focus-visible, .step:active, .step:focus-visible { background: var(--ink); color: var(--win); }
 .play svg, .step svg { display: block; width: 10px; height: 10px; shape-rendering: crispEdges; }
 .controls .step { margin-left: -8px; }   /* step buttons sit flush against play */
-.frame { flex: none; white-space: nowrap; }
-.frame .n { display: inline-block; text-align: right; }
+.frame, .run .clock, .run .tick { flex: none; font-family: "Ark Pixel 12", monospace; font-size: 12px; line-height: 16px; white-space: nowrap; }
+.frame .n, .run .tick .n { display: inline-block; text-align: right; }
 .play .i-play { display: none; }
 .player.paused .i-play { display: block; }
 .player.paused .i-pause { display: none; }
-.track { display: flex; align-items: center; flex: 1; align-self: stretch; touch-action: none; cursor: default; }
-.scrub { flex: 1; height: 10px; border: 1px solid var(--ink); pointer-events: none; }
+.track { display: flex; align-items: center; flex: 1; align-self: stretch; padding: 0 4px; touch-action: none; }
+.track:focus-visible { background: var(--ink); }
+.scrub { flex: 1; height: 12px; border: 1px solid var(--ink); pointer-events: none; }
 .scrub span { display: block; width: 0; height: 100%; background: var(--ink); }
-.player video { cursor: default; }
+.track:focus-visible .scrub { border-color: var(--win); }
+.track:focus-visible .scrub span { background: var(--win); }
 
 /* Run viewer: a car's path from above, drawn a tick at a time */
-.run { margin: 4px 0 14px; border: 1px solid var(--ink); }
+.run { margin: 4px 0 12px; border: 1px solid var(--ink); }
 .run .map { aspect-ratio: 16 / 9; }
-.run canvas { display: block; margin: 0 auto; image-rendering: pixelated; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .run canvas { filter: invert(1); }
-}
-:root[data-theme="dark"] .run canvas { filter: invert(1); }
+.run canvas { position: relative; display: block; margin: 0 auto; image-rendering: pixelated; filter: var(--invert); }
 .run.paused .i-play { display: block; }
 .run.paused .i-pause { display: none; }
 .run .controls { gap: 0; }
-.run .clock { flex: 1; padding-left: 8px; white-space: nowrap; }
-.run .tick { white-space: nowrap; }
-.run .tick .n { display: inline-block; text-align: right; }
-.run + p { margin-top: -6px; }
+.run .clock { flex: 1; padding-left: 8px; }
+.run + p { margin-top: -4px; }
 /* About This Picture: a copy of the desk with the same dots */
 .window:where([data-id="picture"]) { width: min(400px, calc(100vw - 24px)); }
-.copy { display: block; box-sizing: content-box; margin: 4px auto 14px; border: 1px solid var(--ink); image-rendering: pixelated; }
+.copy { position: relative; display: block; box-sizing: content-box; margin: 4px auto 12px; border: 1px solid var(--ink); image-rendering: pixelated; }
 
-/* Zoom rectangles */
+/* Zoom rectangles, and the dotted outline a dragged window leaves behind until it is let go */
 .zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
+.dragrect { position: fixed; z-index: 9999; border: 1px dotted #fff; mix-blend-mode: difference; pointer-events: none; }   /* inverts what it crosses */
 .shield { position: absolute; }
+
+/* Mac scroll bars inside windows: arrow boxes, a track in the 50% pattern, and a square box that
+   rides along it. The front window's alone are drawn; the others are blank. */
+@media (min-width: 601px) and (min-height: 501px) {
+  .content::-webkit-scrollbar { width: 16px; }
+  .content::-webkit-scrollbar-track { border-left: 1px solid var(--ink); background: var(--grey); }
+  .content::-webkit-scrollbar-thumb {
+    background:
+      linear-gradient(to right, var(--ink) 0 1px, transparent 1px) 0 var(--f, 0%) / 16px 16px no-repeat,
+      linear-gradient(var(--ink) 0 1px, var(--win) 1px 15px, var(--ink) 15px) 0 var(--f, 0%) / 16px 16px no-repeat;
+  }
+  .content::-webkit-scrollbar-button { display: none; }
+  .content::-webkit-scrollbar-button:vertical:start:decrement, .content::-webkit-scrollbar-button:vertical:end:increment { display: block; height: 16px; }
+  .content::-webkit-scrollbar-button:vertical:start:decrement { background: var(--sb-up); }
+  .content::-webkit-scrollbar-button:vertical:end:increment { background: var(--sb-down); }
+  .content::-webkit-scrollbar-button:vertical:start:decrement:active { background: var(--sb-up-on); }
+  .content::-webkit-scrollbar-button:vertical:end:increment:active { background: var(--sb-down-on); }
+  .window:not(.front) .content::-webkit-scrollbar-track, .window:not(.front) .content::-webkit-scrollbar-button:vertical:start:decrement, .window:not(.front) .content::-webkit-scrollbar-button:vertical:end:increment { background: linear-gradient(var(--ink) 0 0) 0 0 / 1px 100% no-repeat, var(--win); border: 0; }
+  .window:not(.front) .content::-webkit-scrollbar-thumb { background: none; }
+}
+@supports not selector(::-webkit-scrollbar) {
+  .content { scrollbar-color: var(--ink) var(--win); }
+}
 
 @media (max-width: 600px), (max-height: 500px) {
   .menubar { padding: 0; }
-  .title, .menubar .link { padding: 0 7px; }
+  .title, .menubar .link { padding: 0 8px; }
   /* Menus drop full width under the bar. */
   .menu { position: fixed; top: calc(var(--bar) - 1px); right: 0; max-height: calc(100% - var(--bar) + 1px); overflow-y: auto; border-width: 1px 0; box-shadow: 0 1px 0 var(--ink); }
   .icons {
@@ -390,34 +446,33 @@ a { color: inherit; }
   }
   .icon { width: auto; min-width: 0; }
   .window, .window.wide { inset: 0 !important; width: auto; max-height: none !important; box-shadow: none; border-width: 0; }
-  .titlebar { height: 28px; padding: 6px 3px; cursor: default; }
-  .close { top: 6px; width: 17px; height: 15px; }
-  .content { flex: 1; padding: 12px max(14px, calc((100% - 640px) / 2)) 20px; }
-  .scores li { grid-template-columns: 1fr 40px; gap: 0 12px; margin-bottom: 6px; }
+  .titlebar { height: 28px; padding: 8px 1px 7px; }
+  .close { top: 8px; }
+  .content { flex: 1; padding: 12px max(16px, calc((100% - 640px) / 2)) 16px; }
+  .scores li { grid-template-columns: 1fr 40px; gap: 0 12px; }
+  .scores li + li { margin-top: 8px; }
   .scores .bar { grid-column: 1 / -1; grid-row: 2; }
 }
 @media (max-width: 480px) {
   .frame .word { display: none; }   /* "213 of 375", so the seek bar keeps its room */
 }
 @media (max-width: 360px) {
-  .menubar { font-size: 15px; }
-  .title, .menubar .link { padding: 0 5px; }
+  .title, .menubar .link { padding: 0 6px; }
   .theme { width: 32px; }
-}
-/* No room for GitHub on the bar; it is in the Adi Singh menu. */
-@media (max-width: 359px) {
-  .menubar .wide { display: none; }
 }
 /* Fingers need bigger targets than a mouse. */
 @media (pointer: coarse) {
   html { --bar: 34px; }
-  .close::after { inset: -10px -12px; }
-  .tweets li { padding: 4px 0; }
+  .close::after { inset: -11px -14px; }
+  .tweets li + li { margin-top: 0; }
+  .tweets li > * { padding: 6px 0; }
+  .tweets a { display: block; }
   .menubar .link { min-width: 36px; text-align: center; }
   .menu a { line-height: 44px; }
-  .menu [role="separator"] { height: 13px; background-position-y: 6px; }
-  .controls { height: 34px; }
-  .play, .step { width: 44px; height: 33px; }
+  .menu [role="separator"] { padding: 6px 0 5px; }
+  .btn { line-height: 28px; }
+  .controls { height: 35px; }
+  .play, .step { width: 44px; height: 34px; }
 }
 
 /* Print: only the plain sheet that printSheet() builds, black on white. */
@@ -427,9 +482,11 @@ a { color: inherit; }
   html, body { height: auto; overflow: visible; background: #fff; color: #000; }
   body > * { display: none !important; }
   body > .print { display: block !important; }
-  .print { font-family: Georgia, "Times New Roman", serif; font-size: 9.5pt; line-height: 1.35; }
-  .print h1 { margin: 0 0 6pt; font-size: 20pt; font-weight: normal; line-height: 1.2; }
-  .print h2 { display: flex; justify-content: space-between; margin: 0; font-size: 13pt; line-height: 1.3; }
+  .print { font-family: Georgia, "Times New Roman", serif; font-size: 9.5pt; line-height: 1.35; word-spacing: normal; }
+  /* The name and each project's heading in the pixel fonts, at whole multiples of a pixel's size;
+     long text in a serif, which reads better on paper at this size than a pixel font. */
+  .print h1 { margin: 0 0 6pt; font: 24pt/30pt "Ark Pixel 16", monospace; word-spacing: -0.125em; }
+  .print h2 { display: flex; justify-content: space-between; margin: 0 0 3pt; font: 12pt/15pt "Ark Pixel 12 Bold", monospace; word-spacing: -0.125em; }
   .print section { margin-top: 12pt; padding-top: 6pt; border-top: 1pt solid #000; break-inside: avoid; }
   .print p { margin: 0 0 5pt; }
   .print .blurb { font-style: italic; }
@@ -453,15 +510,14 @@ a { color: inherit; }
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=bf5ece8492"></script>
+<script src="projects.js?v=b6e89fdc0b"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const phone = matchMedia("(max-width: 600px), (max-height: 500px)");
-const PX = 32; // icon art is drawn at 32x32 and shown at 64x64
 
-const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: SITE.contact, art: "doc" };
+const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: SITE.contact, icon: "media/icons/readme.png" };
 const items = [readme, ...PROJECTS];
 const byId = new Map(items.map(p => [p.id, p]));
 // A project's images open in a window of their own, which belongs to the project's window.
@@ -476,12 +532,23 @@ const el = (tag, props = {}, kids = []) => {
   for (const k of [].concat(kids)) n.append(k);
   return n;
 };
+// Pixel fonts blur off whole screen pixels. Centred text, or text in a grid of fractional
+// columns, often lands between two, so it is nudged left onto one.
+const snap = (n) => {
+  n.style.left = "";
+  const f = n.getBoundingClientRect().x * devicePixelRatio % 1;
+  if (f) n.style.left = -f / devicePixelRatio + "px";
+};
+const SNAP = ".icon .label, .titlebar h2, .btn span, .menubar span";
+Promise.all([...document.fonts].map(f => f.load())).then(() => document.querySelectorAll(SNAP).forEach(snap));
+addEventListener("resize", () => document.querySelectorAll(SNAP).forEach(snap));
 
-const ext = (props) => el("a", { target: "_blank", rel: "noopener", ...props });
+const ext = (props, kids) => el("a", { target: "_blank", rel: "noopener", ...props }, kids);
 const attrs = (n, a) => { for (const k in a) n.setAttribute(k, a[k]); return n; };
+// Button glyphs, drawn in pixels as tall as the button font's capitals.
 const glyphs = {
-  mail: '<svg viewBox="0 0 14 14"><rect y="2" width="14" height="10"/><path class="flap" d="M1 3.5l6 4.5 6-4.5" fill="none" stroke-width="1.4"/></svg>',
-  x: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+  mail: '<svg width="13" height="9" viewBox="0 0 13 9"><path d="M0 0h13v1H0zM0 1h3v1H0zM10 1h3v1H10zM0 2h2v6H0zM3 2h1v1H3zM9 2h1v1H9zM11 2h2v6H11zM4 3h1v1H4zM8 3h1v1H8zM5 4h1v1H5zM7 4h1v1H7zM6 5h1v1H6zM0 8h13v1H0z"/></svg>',
+  x: '<svg width="10" height="9" viewBox="0 0 10 9"><path d="M0 0h2v1H0zM8 0h1v1H8zM1 1h2v1H1zM7 1h1v1H7zM2 2h2v1H2zM6 2h1v1H6zM3 3h3v1H3zM4 4h2v1H4zM3 5h1v1H3zM5 5h2v1H5zM2 6h1v1H2zM6 6h2v1H6zM1 7h1v1H1zM7 7h2v1H7zM0 8h1v1H0zM8 8h2v1H8z"/></svg>',
 };
 
 /* Menu bar. A mouse works it like the Mac's: press a title and the menu drops, drag to an item
@@ -513,7 +580,7 @@ const MENUS = [
 ];
 const menuList = attrs(el("ul", { className: "menus" }), { role: "menubar", "aria-label": "Menus" });
 const titles = MENUS.map((def, n) => {
-  const t = attrs(el("button", { type: "button", className: "title " + (def.className || ""), textContent: def.title, id: "menu-" + n, tabIndex: n ? -1 : 0 }), { role: "menuitem", "aria-haspopup": "menu", "aria-expanded": "false" });
+  const t = attrs(el("button", { type: "button", className: "title " + (def.className || ""), id: "menu-" + n, tabIndex: n ? -1 : 0 }, el("span", { textContent: def.title })), { role: "menuitem", "aria-haspopup": "menu", "aria-expanded": "false" });
   const m = attrs(el("ul", { className: "menu", hidden: true }), { role: "menu", "aria-labelledby": t.id });
   for (const it of def.items) {
     const li = it.sep ? attrs(el("li"), { role: "separator" }) : attrs(el("li", {}, menuItem(it)), { role: "none" });
@@ -553,6 +620,8 @@ function openMenu(t) {
   shield.hidden = false;
   openTitle = t;
   rove(t);
+  snap(t.menu);   // the menu's edges and text on whole screen pixels, like its title's
+  t.menu.querySelectorAll("span").forEach(snap);
 }
 function closeMenu() {
   if (!openTitle) return;
@@ -679,7 +748,7 @@ menubar.append(menuList);
 
 // Links marked bar are also on the bar itself, one click away.
 const extras = el("div", { className: "extras" });
-for (const l of SITE.links.filter(l => l.bar)) extras.append(ext({ className: l.bar === "wide" ? "link wide" : "link", href: l.href, textContent: l.label }));
+for (const l of SITE.links.filter(l => l.bar)) extras.append(ext({ className: "link", href: l.href }, el("span", { textContent: l.label })));
 menubar.append(extras);
 
 /* Light and dark */
@@ -701,55 +770,20 @@ themeBtn.addEventListener("click", () => {
 extras.append(themeBtn);
 labelTheme();
 
-/* Icon art. 1-bit icons are pure black and white, solid inside their outline so the desk never
-   shows through, and dark mode inverts them in CSS. Nothing reads pixels back from a canvas
-   to draw them, because privacy browsers add noise to what a canvas returns. */
-function drawPixels(ctx, fn) {
-  for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) {
-    const v = fn(x, y);
-    if (v) { ctx.fillStyle = v === 1 ? "#000" : "#fff"; ctx.fillRect(x, y, 1, 1); }
-  }
-}
-const art = {
-  // A document with a folded corner and text lines.
-  doc: (x, y) => {
-    if (x < 6 || x > 25 || y < 2 || y > 29) return 0;
-    if (x > 19 && y < 8 && x - 19 > y - 2) return 0;
-    if (x === 6 || x === 25 || y === 2 || y === 29) return 1;
-    if (x - 19 === y - 2 && x >= 19) return 1;
-    if (x === 19 && y <= 8) return 1;
-    if (y === 8 && x >= 19) return 1;
-    if (y >= 12 && y <= 25 && y % 3 === 0 && x >= 9 && x <= 22) return 1;
-    return 2;
-  },
-  // A small optical disc.
-  disc: (x, y) => {
-    const d = Math.hypot(x - 15.5, y - 15.5);
-    if (d > 14) return 0;
-    if (d > 13) return 1;
-    if (d < 2.5) return 2;
-    if (d < 3.5) return 1;
-    if (d < 6 && d > 5) return 1;
-    if (x > 17 && x < 22 && y > 6 && y < 11 && d > 9) return 1;
-    return 2;
-  },
-};
-function iconCanvas(item) {
-  const c = el("canvas", { width: PX, height: PX, className: item.iconColor ? "color" : "" });
-  const ctx = c.getContext("2d");
-  if (item.icon) {
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0);
-    img.src = item.icon;
-  } else {
-    drawPixels(ctx, art[item.art || "disc"]);
-  }
-  return c;
+/* Icon art: 32x32, 1-bit, in black on white, with the same name plus -selected and -open for the
+   Finder's selected and open icons. Dark mode inverts it in CSS. */
+const art = (src, className) => el("img", { src, className, alt: "", width: 32, height: 32 });
+function iconArt(item) {
+  const span = el("span", { className: "art" }, [
+    art(item.icon, "base"), art(item.icon.replace(".png", "-selected.png"), "chosen"), art(item.icon.replace(".png", "-open.png"), "opened"),
+  ]);
+  span.setAttribute("aria-hidden", "true");
+  return span;
 }
 
 /* Icons */
 for (const item of items) {
-  const b = el("button", { className: "icon", type: "button", title: item.name }, [iconCanvas(item), el("span", { className: "label", textContent: item.label || item.name })]);
+  const b = el("button", { className: "icon", type: "button", title: item.name }, [iconArt(item), el("span", { className: "label", textContent: item.label || item.name })]);
   b.dataset.id = item.id;
   b.addEventListener("pointerdown", e => e.stopPropagation());
   b.addEventListener("click", e => {
@@ -929,6 +963,7 @@ function run(r) {
     const W = Math.floor(map.clientWidth / 2), H = Math.floor(W * 9 / 16), m = 8;
     Object.assign(canvas, { width: W, height: H });
     Object.assign(canvas.style, { width: W * 2 + "px", height: H * 2 + "px" });
+    snap(canvas);
     const xs = paths.flatMap(p => p.filter((v, i) => i % 3 === 0)), zs = paths.flatMap(p => p.filter((v, i) => i % 3 === 2));
     const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
     const s = Math.min((W - 2 * m) / (x1 - x0), (H - 2 * m) / (z1 - z0));
@@ -989,19 +1024,22 @@ function scores(s) {
       const fill = el("span");
       fill.style.width = r.accuracy_pct + "%";
       ol.append(el("li", {}, [
-        el("span", {}, [r.model + " ", el("span", { className: "effort", textContent: r.effort })]),
+        el("span", { textContent: r.model + ", " + r.effort }),
         el("span", { className: "bar" }, fill),
         el("span", { className: "n", textContent: r.accuracy_pct + "%" }),
       ]));
     }
     const [y, m, d] = FRONTIER.generated.split("-");
     const updated = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
-    note.append(el("span", { textContent: `Top ${rows.length} of ${top.size} models, each at its highest tested effort. Updated ${updated}. ` }), ext({ href: s.page, textContent: `See all ${top.size}` }));
+    note.append(`Top ${rows.length} of ${top.size} models, each at its highest tested effort. Updated ${updated}. `, ext({ href: s.page, textContent: `See all ${top.size}` }));
   });
   return [ol, note];
 }
 function content(item) {
   const c = el("div", { className: "content", tabIndex: 0 });   // focusable, so keys scroll it
+  // The scroll bar's square box sits as far down its thumb as the window is scrolled, so it runs
+  // the whole track like the Mac's, however long the thumb is.
+  c.addEventListener("scroll", () => c.style.setProperty("--f", c.scrollTop / (c.scrollHeight - c.clientHeight) * 100 + "%"), { passive: true });
   for (const p of item.body || []) {
     // [text](url) in a paragraph becomes a link.
     const parts = p.split(/\[([^\]]+)\]\(([^)]+)\)/);
@@ -1010,7 +1048,7 @@ function content(item) {
   if (item.index) {
     c.append(el("ul", { className: "index" }, item.index.map(p => {
       const b = el("button", { type: "button" }, [
-        el("span", { textContent: p.name }),
+        el("span", { className: "name", textContent: p.name }),
         el("span", { className: "year", textContent: p.year }),
         el("span", { className: "blurb", textContent: p.blurb }),
       ]);
@@ -1029,10 +1067,14 @@ function content(item) {
   if (item.pictures) c.append(el("div", { className: "pictures" }, item.pictures.map(i => el("figure", {}, [el("img", { src: i.src, alt: i.alt }), el("figcaption", { textContent: i.alt })]))));
   if (item.scores) c.append(...scores(item.scores));
   if (item.make) c.append(...item.make());
-  if (item.info) c.append(el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })])));
+  if (item.info) c.append(el("div", { className: "getinfo" }, [
+    el("div", { className: "head" }, [el("img", { src: item.icon, alt: "", width: 32, height: 32 }), item.name]),
+    el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })])),
+  ]));
   if (item.tweets && item.tweets.length) c.append(el("ul", { className: "tweets" }, item.tweets.map(t => el("li", {}, [el("span", { className: "date", textContent: t.date }), ext({ href: t.href, textContent: t.text })]))));
   if (item.links.length) c.append(el("div", { className: "buttons" }, item.links.map(l => {
-    const a = el("a", { className: "btn", href: l.href, textContent: l.label, ...(l.href.startsWith("mailto:") ? {} : { target: "_blank", rel: "noopener" }) });
+    const a = el("a", { className: "btn", href: l.href, ...(l.href.startsWith("mailto:") ? {} : { target: "_blank", rel: "noopener" }) });
+    a.append(el("span", { textContent: l.label }));
     if (l.glyph) a.insertAdjacentHTML("afterbegin", glyphs[l.glyph]);
     return a;
   })));
@@ -1060,8 +1102,8 @@ function open(id, opener, entry) {
   if (windows.has(id)) { const w = windows.get(id); front(w); w.body.focus(); return; }
   if (entry === undefined) { history.pushState({ n: ++here, id }, ""); entry = here; }
 
+  // The close box is empty, and shows a starburst while pressed.
   const closeBtn = el("button", { className: "close", type: "button", innerHTML:
-    '<svg class="x" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z" fill="currentColor"/></svg>' +
     '<svg class="burst" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM1 5h1v1H1zM0 6h1v1H0zM3 0h1v2H3zM3 5h1v2H3zM0 3h2v1H0zM5 3h2v1H5z" fill="currentColor"/></svg>' });
   closeBtn.setAttribute("aria-label", "Close");
   const title = el("div", { className: "titlebar" }, [closeBtn, el("h2", { id: id + "-title", textContent: item.name })]);
@@ -1071,18 +1113,20 @@ function open(id, opener, entry) {
   w.entry = entry;
   w.body = body;
   w.opener = opener;
-  w.origin = icon ? icon.querySelector("canvas") : item.parent ? windows.get(item.parent).querySelector(".composite") : item.origin();   // zoom from here
+  w.origin = icon ? icon.querySelector(".art") : item.parent ? windows.get(item.parent).querySelector(".composite") : item.origin();   // zoom from here
   w.setAttribute("role", "dialog");   // non-modal
   w.setAttribute("aria-labelledby", id + "-title");
   w.style.visibility = "hidden";
   desk.append(w);
   windows.set(id, w);
+  icon?.classList.add("open");   // the Finder fills an open item's icon with grey
 
   // Cascade new windows from the top-left, keeping them on screen.
   place(w, Math.min(24 + cascade * 24, desk.clientWidth - w.offsetWidth - 12), Math.min(16 + cascade * 24, desk.clientHeight - w.offsetHeight - 12));
   cascade = (cascade + 1) % 8;
   front(w);
 
+  w.querySelectorAll(SNAP).forEach(snap);
   zoom(w.origin.getBoundingClientRect(), w.getBoundingClientRect(), () => {
     w.style.visibility = "";
     if (w.classList.contains("front")) w.body.focus();
@@ -1124,7 +1168,7 @@ function close(id, popped) {
     w.remove();
     shield.remove();
     for (const v of w.querySelectorAll("video")) { v.removeAttribute("src"); v.load(); }   // stop downloading
-    zoom(from, back, () => {});
+    zoom(from, back, () => { if (!windows.has(id)) icon?.classList.remove("open"); });
   }, at + 30);
   const next = frontmost();
   if (next) front(next);
@@ -1134,28 +1178,35 @@ function close(id, popped) {
   (opener || (next ? next.body : icon))?.focus();   // this can bring a window to the front, so it goes first
   w.style.zIndex = shield.style.zIndex = ++z;   // stay on top while it flickers out
 }
-// Keep a window's close box and at least 120px of its title bar on the desk, below the menu bar.
-// Its height is capped from its top, so its bottom stays on the desk and content that loads
-// later scrolls instead of running off.
+// Keep a window's close box and at least 120px of its title bar on the desk, below the menu bar,
+// on whole pixels. Its height is capped from its top, so its bottom stays on the desk and content
+// that loads later scrolls instead of running off.
+const clamp = (left, top) => [Math.round(Math.max(0, Math.min(left, desk.clientWidth - 120))), Math.round(Math.max(0, Math.min(top, desk.clientHeight - 120)))];
 function place(w, left, top) {
-  top = Math.max(0, Math.min(top, desk.clientHeight - 120));
-  w.style.left = Math.max(0, Math.min(left, desk.clientWidth - 120)) + "px";
+  [left, top] = clamp(left, top);
+  w.style.left = left + "px";
   w.style.top = top + "px";
   w.style.maxHeight = desk.clientHeight - top - 12 + "px";
 }
 new ResizeObserver(() => { for (const w of windows.values()) place(w, parseFloat(w.style.left), parseFloat(w.style.top)); }).observe(desk);
+// Dragging a title bar moves a dotted outline of the window, and the window jumps there when it
+// is let go, as on the Mac, which couldn't redraw a window while it moved.
 function drag(w, handle) {
-  let sx, sy, ox, oy;
+  let sx, sy, ox, oy, outline;
+  const to = e => clamp(ox + e.clientX - sx, oy + e.clientY - sy);
+  const move = ([x, y]) => { outline.style.left = desk.offsetLeft + x + "px"; outline.style.top = desk.offsetTop + y + "px"; };
   handle.addEventListener("pointerdown", e => {
     if (phone.matches || e.button !== 0) return;
     sx = e.clientX; sy = e.clientY; ox = w.offsetLeft; oy = w.offsetTop;
     handle.setPointerCapture(e.pointerId);
-    handle.style.cursor = "grabbing";
+    outline = el("div", { className: "dragrect" });
+    Object.assign(outline.style, { width: w.offsetWidth + "px", height: w.offsetHeight + "px" });
+    move([ox, oy]);
+    document.body.append(outline);
   });
-  handle.addEventListener("pointermove", e => {
-    if (handle.hasPointerCapture(e.pointerId)) place(w, ox + e.clientX - sx, oy + e.clientY - sy);
-  });
-  handle.addEventListener("pointerup", () => { handle.style.cursor = ""; });
+  handle.addEventListener("pointermove", e => { if (handle.hasPointerCapture(e.pointerId)) move(to(e)); });
+  handle.addEventListener("pointerup", e => { if (handle.hasPointerCapture(e.pointerId)) place(w, ...to(e)); });
+  handle.addEventListener("lostpointercapture", () => outline.remove());
 }
 
 // Space plays or pauses the video in the front window, unless a button or link has focus.
@@ -1214,7 +1265,7 @@ const load = p => sources.get(p) || sources.set(p, new Promise(r => { const i = 
 let W, H, K, frame, px32, order, starts, gen = 0, timer;
 const pick = (not) => { const n = Math.floor(Math.random() * (SITE.pictures.length - 1)); return n >= not ? n + 1 : n; };
 let shown = Math.floor(Math.random() * SITE.pictures.length);   // the picture on the desk, or dissolving in
-let onDesk = shown;                                             // the picture a dissolve starts from
+let onDesk = -1;    // the picture a dissolve starts from; -1 while the desk is the 50% pattern
 
 
 // The canvas has one pixel per dot, and CSS scales it up without smoothing. Each dot is a whole
@@ -1222,6 +1273,7 @@ let onDesk = shown;                                             // the picture a
 function size() {
   const dpr = devicePixelRatio;
   K = Math.max(1, Math.round(dpr));
+  document.documentElement.style.setProperty("--dot", K / dpr + "px");   // the 50% pattern in CSS uses the same dots
   W = picture.width = Math.ceil(Math.round(desk.clientWidth * dpr) / K);
   H = picture.height = Math.ceil(Math.round(desk.clientHeight * dpr) / K);
   picture.style.width = W * K / dpr + "px";
@@ -1245,15 +1297,18 @@ const ink = () => isDark() ? 0xffffffff : 0xff000000;
 const BAYER = [0,32,8,40,2,34,10,42,48,16,56,24,50,18,58,26,12,44,4,36,14,46,6,38,60,28,52,20,62,30,54,22,3,35,11,43,1,33,9,41,51,19,59,27,49,17,57,25,15,47,7,39,13,45,5,37,63,31,55,23,61,29,53,21].map(v => (v + 0.5) / 64);
 // The picture as 1-bit ink: a drawing with an ordered dither, a photo with Floyd-Steinberg.
 // p.marks says whether the dots draw the picture's dark or light parts.
+// Where a picture lands in a W x H frame, as [x, y, width, height]: a photo covers it, and a
+// drawing is fitted whole with a margin.
+function framed(img, p, W, H) {
+  const s = p.kind === "photo" ? Math.max(W / img.width, H / img.height) : Math.min(W / img.width, H / img.height) * 0.9;
+  return [(W - img.width * s) * p.position[0], (H - img.height * s) * p.position[1], img.width * s, img.height * s];
+}
 function dither(img, p, W, H) {
-  const [fx, fy] = p.position;
   const c = el("canvas", { width: W, height: H });
   const ctx = c.getContext("2d", { willReadFrequently: true });
-  // A photo covers the desk. A drawing is fitted whole, with a margin, on white paper.
-  const s = p.kind === "photo" ? Math.max(W / img.width, H / img.height) : Math.min(W / img.width, H / img.height) * 0.9;
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, W, H);
-  ctx.drawImage(img, (W - img.width * s) * fx, (H - img.height * s) * fy, img.width * s, img.height * s);
+  ctx.drawImage(img, ...framed(img, p, W, H));
   const d = ctx.getImageData(0, 0, W, H).data;
   const lightInk = p.marks === "light" || (p.marks === "theme" && isDark());
   const e = new Float32Array(W * H);
@@ -1293,7 +1348,10 @@ async function show(n, dissolve) {
   const img = await load(p);
   if (g !== gen) return;
   const next = dither(img, p, W, H);
-  if (copy?.live) copy.next = dither(img, p, copy.w, copy.h);
+  if (copy?.live) {
+    copy.next = dither(img, p, copy.w, copy.h);
+    copy.crop(copy.shown ? [copy.shown, [p, img]] : [[p, img]]);   // room for both while it dissolves
+  }
   if (dissolve) {
     for (let k = 1; k <= STEPS; k++) {
       await new Promise(r => setTimeout(r, STEP_MS));
@@ -1302,6 +1360,7 @@ async function show(n, dissolve) {
     }
   } else paint(next, 0, 256);
   onDesk = n;
+  if (copy?.live) copy.crop([[p, img]]);
   if (still) return;
   timer = setTimeout(advance, HOLD[0] + Math.random() * (HOLD[1] - HOLD[0]));
 }
@@ -1309,7 +1368,16 @@ function advance() {
   if (document.hidden) return document.addEventListener("visibilitychange", advance, { once: true });
   show(pick(shown), true);
 }
-function redraw() { size(); show(shown, false); }
+// Until the first picture has loaded, the desk is the 50% pattern; then the picture dissolves in over it.
+function redraw() {
+  size();
+  if (onDesk >= 0) return show(shown, false);
+  const on = ink();
+  for (let i = 0; i < px32.length; i++) px32[i] = (i % W + (i / W | 0)) % 2 ? on : 0;
+  pctx.putImageData(frame, 0, 0);
+  desk.classList.add("drawn");
+  show(shown, !still);
+}
 // The desk draws once it has a size, and again after it is resized.
 let resizing;
 new ResizeObserver(() => {
@@ -1319,7 +1387,7 @@ new ResizeObserver(() => {
 // Only a "theme" picture's dots change with the theme. Otherwise just the ink does, and a dissolve carries on.
 function themeChanged() {
   labelTheme();
-  if (SITE.pictures[shown].marks === "theme" || SITE.pictures[onDesk].marks === "theme") return show(shown, false);
+  if (SITE.pictures[shown].marks === "theme" || SITE.pictures[onDesk]?.marks === "theme") return show(shown, false);
   const on = ink();
   for (let i = 0; i < px32.length; i++) if (px32[i]) px32[i] = on;
   pctx.putImageData(frame, 0, 0);
@@ -1366,11 +1434,11 @@ byId.set("picture", { id: "picture", name: "About This Picture", links: [],
     const canvas = el("canvas", { className: "copy" });
     canvas.setAttribute("aria-hidden", "true");
     const caption = el("p");
-    const source = ext({ className: "btn", textContent: "Source" });
-    const next = el("button", { type: "button", className: "btn", textContent: "Next Picture" });
+    const source = ext({ className: "btn" }, el("span", { textContent: "Source" }));
+    const next = el("button", { type: "button", className: "btn" }, el("span", { textContent: "Next Picture" }));
     next.addEventListener("click", nextPicture);
     const ctx = canvas.getContext("2d");
-    const c = copy = { canvas, w: 0, h: 0,
+    const c = copy = { canvas, w: 0, h: 0, y0: 0, cap: 0, shown: null,
       // Sized and still in the open window, not one closed or closing.
       get live() { return c.w > 0 && windows.get("picture")?.contains(canvas); },
       name(p) { caption.textContent = p.title; source.href = p.page; source.setAttribute("aria-label", "Source of " + p.title + ", on Wikimedia Commons"); },
@@ -1378,34 +1446,55 @@ byId.set("picture", { id: "picture", name: "About This Picture", links: [],
       paint(lo, hi) {
         const on = ink();
         for (let i = 0; i < c.rank.length; i++) if (c.rank[i] >= lo && c.rank[i] < hi) c.px32[i] = c.next[i] ? on : 0;
-        ctx.putImageData(c.frame, 0, 0);
+        ctx.putImageData(c.frame, 0, -c.y0);
       },
       recolor() {
         const on = ink();
         for (let i = 0; i < c.px32.length; i++) if (c.px32[i]) c.px32[i] = on;
-        ctx.putImageData(c.frame, 0, 0);
+        ctx.putImageData(c.frame, 0, -c.y0);
+      },
+      // Show only the rows with pictures ps ([picture, image] pairs) in them: a drawing's own band
+      // and a margin, a photo's whole height. A band taller than the cap is cut where the last
+      // picture is placed. On a tall phone this is the difference between a drawing and a tall box.
+      crop(ps) {
+        let y0 = c.h, y1 = 0;
+        const pad = Math.round(c.w * 0.05);
+        for (const [p, img] of ps) {
+          const [, y, , h] = p.kind === "photo" ? [0, 0, 0, c.h] : framed(img, p, c.w, c.h);
+          y0 = Math.min(y0, Math.max(0, Math.floor(y - pad)));
+          y1 = Math.max(y1, Math.min(c.h, Math.ceil(y + h + pad)));
+        }
+        const over = y1 - y0 - c.cap;
+        if (over > 0) { y0 += Math.round(over * ps.at(-1)[0].position[1]); y1 = y0 + c.cap; }
+        c.shown = ps.at(-1);
+        c.y0 = y0;
+        canvas.height = y1 - y0;
+        canvas.style.height = canvas.height * c.k / devicePixelRatio + "px";
+        ctx.putImageData(c.frame, 0, -y0);
       },
     };
     c.name(SITE.pictures[shown]);
-    // As wide as the window allows and at most 55% of the screen's height, in whole desk dots.
+    // The desk's shape, as wide as the window allows, in whole desk dots; crop() then keeps the
+    // rows the picture is in, at most 55% of the screen's height.
     const fit = () => {
       if (copy !== c || !canvas.isConnected) return ro.disconnect();
       const dpr = devicePixelRatio, k = Math.max(1, Math.round(dpr));
       const aspect = desk.clientWidth / desk.clientHeight;
-      const css = Math.min(canvas.parentNode.clientWidth - 42, innerHeight * 0.55 * aspect);
+      const box = getComputedStyle(canvas.parentNode);
+      const css = canvas.parentNode.clientWidth - parseFloat(box.paddingLeft) - parseFloat(box.paddingRight) - 2;
       const w = Math.floor(css * dpr / k), h = Math.round(w / aspect);
       if (w === c.w && h === c.h) return;
-      Object.assign(c, { w, h });
+      Object.assign(c, { w, h, k, y0: 0, shown: null, cap: Math.floor(innerHeight * 0.55 * dpr / k) });
       canvas.width = w;
-      canvas.height = h;
+      canvas.height = 0;
       canvas.style.width = w * k / dpr + "px";
-      canvas.style.height = h * k / dpr + "px";
+      canvas.style.height = "0px";
       c.frame = ctx.createImageData(w, h);
       c.px32 = new Uint32Array(c.frame.data.buffer);
       c.rank = new Uint8Array(w * h);
       for (let i = 0; i < c.rank.length; i += 65536) crypto.getRandomValues(c.rank.subarray(i, i + 65536));
       const n = shown, p = SITE.pictures[n];
-      load(p).then(img => { if (copy === c && shown === n) { c.next = dither(img, p, w, h); c.paint(0, 256); } });
+      load(p).then(img => { if (copy === c && shown === n) { c.next = dither(img, p, w, h); c.crop([[p, img]]); c.paint(0, 256); snap(canvas); } });
     };
     // The window's width follows the screen's, and so does the desk's.
     const ro = new ResizeObserver(fit);

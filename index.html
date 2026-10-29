@@ -312,6 +312,7 @@ a { color: inherit; }
 
 /* Zoom rectangles */
 .zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
+.shield { position: absolute; }
 
 @media (max-width: 600px), (max-height: 500px) {
   .menubar { padding: 0; }
@@ -667,6 +668,12 @@ function close(id) {
   for (const v of w.querySelectorAll("video")) v.pause();
   windows.delete(id);
   w.inert = true;
+  // Until it is gone, a shield over the closing window swallows taps, so a fast double tap
+  // can't reach the window or icon underneath. The wipe's clip-path would let them through.
+  const shield = el("div", { className: "shield" });
+  Object.assign(shield.style, { left: w.offsetLeft + "px", top: w.offsetTop + "px", width: w.offsetWidth + "px", height: w.offsetHeight + "px" });
+  shield.addEventListener("mousedown", e => e.preventDefault());   // and keeps focus where close() puts it
+  desk.append(shield);
   // Flicker inverted twice, get repainted away in a few jerky bands, then zoom back to the icon.
   const frames = still ? [] : [
     () => w.style.filter = "invert(1)", () => w.style.filter = "", () => w.style.filter = "invert(1)", () => w.style.filter = "",
@@ -674,11 +681,11 @@ function close(id) {
   ];
   let at = 0;
   for (const f of frames) { at += 25 + Math.random() * 40; setTimeout(f, at); }
-  setTimeout(() => { w.remove(); zoom(from, back, () => {}); }, at + 30);
+  setTimeout(() => { w.remove(); shield.remove(); zoom(from, back, () => {}); }, at + 30);
   const next = [...windows.values()].sort((a, b) => b.style.zIndex - a.style.zIndex)[0];
   if (next) { front(next); history.replaceState(null, "", "#" + [...windows].find(([, v]) => v === next)[0]); }
   else history.replaceState(null, "", location.pathname);
-  w.style.zIndex = ++z;   // stay on top while it flickers out
+  w.style.zIndex = shield.style.zIndex = ++z;   // stay on top while it flickers out
   if (w.origin.isConnected) (icon || w.origin).focus();
 }
 function drag(w, handle) {

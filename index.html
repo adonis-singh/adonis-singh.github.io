@@ -540,7 +540,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=b819d1ad88"></script>
+<script src="projects.js?v=cf0a0f0645"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -1380,14 +1380,19 @@ const HOLD = [60000, 180000]; // ms a picture stays, picked at random between th
 const STEPS = 48;             // dissolve steps
 const STEP_MS = 100;          // ms per dissolve step
 const DEPTH = 0.5;    // darkest tone, as a share of pixels inked; keeps the picture behind the windows
+const PAPER = 0.35;   // photos: the palest 35% of the ink scale stays bare paper
+const PHOTO_DEPTH = 0.4; // photos: darkest tone
+const FADE = 0.2;     // photos fade out over this share of the room's short side, where the room meets windows or icons
 const picture = el("canvas", { className: "picture" });
 picture.setAttribute("aria-hidden", "true");   // About This Picture names it
 desk.prepend(picture);
 const pctx = picture.getContext("2d");
 const sources = new Map();
 const load = p => sources.get(p) || sources.set(p, new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = p.src; })).get(p);
-let W, H, K, frame, px32, order, starts, gen = 0, timer;
-const pick = (not) => { const n = Math.floor(Math.random() * (SITE.pictures.length - 1)); return n >= not ? n + 1 : n; };
+let W, H, K, R, frame, px32, order, starts, gen = 0, timer;
+// The next picture is one that rhymes with this one, at random.
+const pictureAt = new Map(SITE.pictures.map((p, n) => [p.id, n]));
+const pick = n => { const next = SITE.pictures[n].next; return pictureAt.get(next[Math.floor(Math.random() * next.length)]); };
 let shown = Math.floor(Math.random() * SITE.pictures.length);   // the picture on the desk, or dissolving in
 const firstPicture = load(SITE.pictures[shown]);   // before any window asks for its pictures and videos
 let onDesk = -1;    // the picture a dissolve starts from; -1 while the desk is the 50% pattern
@@ -1415,6 +1420,15 @@ function size() {
   const at = starts.slice(0, 256);
   order = new Uint32Array(W * H);
   for (let i = 0; i < rank.length; i++) order[at[rank[i]]++] = i;
+  // The room: the open part of the desk, in dots, where the picture's subject goes. On an upright phone
+  // it is below the icon grid; on a phone on its side, the whole desk. Otherwise it is right of where
+  // windows open (24px from the left, 560px wide), keeping at least 440px, and left of the icon column.
+  const d = desk.getBoundingClientRect(), f = W / d.width;
+  const icons = [...iconList.children].map(li => li.getBoundingClientRect());
+  const below = Math.max(...icons.map(r => r.bottom)) - d.top + 8, left = Math.min(...icons.map(r => r.left)) - d.left - 8;
+  R = phone.matches
+    ? [0, d.height > d.width ? below * f : 0, W, H]
+    : [Math.max(0, Math.min(600, left - 440)) * f, 0, left * f, H];
 }
 // Ink is opaque white in dark mode and opaque black in light mode, as ABGR on little-endian.
 const ink = () => isDark() ? 0xffffffff : 0xff000000;
@@ -1422,22 +1436,38 @@ const ink = () => isDark() ? 0xffffffff : 0xff000000;
 const BAYER = [0,32,8,40,2,34,10,42,48,16,56,24,50,18,58,26,12,44,4,36,14,46,6,38,60,28,52,20,62,30,54,22,3,35,11,43,1,33,9,41,51,19,59,27,49,17,57,25,15,47,7,39,13,45,5,37,63,31,55,23,61,29,53,21].map(v => (v + 0.5) / 64);
 // The picture as 1-bit ink: a drawing with an ordered dither, a photo with Floyd-Steinberg.
 // p.marks says whether the dots draw the picture's dark or light parts.
-// Where a picture lands in a W x H frame, as [x, y, width, height]: a photo covers it, and a
-// drawing is fitted whole with a margin.
-function framed(img, p, W, H) {
-  const s = p.kind === "photo" ? Math.max(W / img.width, H / img.height) : Math.min(W / img.width, H / img.height) * 0.9;
-  return [(W - img.width * s) * p.position[0], (H - img.height * s) * p.position[1], img.width * s, img.height * s];
-}
-function dither(img, p, W, H) {
+function dither(img, p) {
+  const [x0, y0, x1, y1] = R;
+  const photo = p.kind === "photo";
   const c = el("canvas", { width: W, height: H });
   const ctx = c.getContext("2d", { willReadFrequently: true });
+  // A photo covers the room. A drawing is fitted whole into it, with a margin, on white paper.
+  const fit = photo ? Math.max : (a, b) => Math.min(a, b) * 0.9;
+  const s = fit((x1 - x0) / img.width, (y1 - y0) / img.height);
+  const w = img.width * s, h = img.height * s;
+  // p.position, the point of the picture where its subject is, goes to the middle of the room,
+  // as far as the photo still covering the room, or the drawing staying inside it, allows.
+  const place = (lo, hi, f, size) => {
+    const v = (lo + hi) / 2 - f * size;
+    return photo ? Math.min(Math.max(v, hi - size), lo) : Math.min(Math.max(v, lo), hi - size);
+  };
+  const x = place(x0, x1, p.position[0], w), y = place(y0, y1, p.position[1], h);
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, W, H);
-  ctx.drawImage(img, ...framed(img, p, W, H));
+  ctx.drawImage(img, x, y, w, h);
   const d = ctx.getImageData(0, 0, W, H).data;
   const lightInk = p.marks === "light" || (p.marks === "theme" && isDark());
   const e = new Float32Array(W * H);
-  for (let i = 0; i < W * H; i++) e[i] = (lightInk ? d[i * 4] : 255 - d[i * 4]) / 255 * DEPTH;
+  if (photo) {
+    // Only the photo's strong tones draw, and it fades out where the room meets windows or icons;
+    // outside the room is paper.
+    const F = FADE * Math.min(x1 - x0, y1 - y0);
+    for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) {
+      const i = yy * W + xx;
+      const t = Math.min(Math.max(Math.min(x0 ? xx - x0 : F, x1 < W ? x1 - xx : F, y0 ? yy - y0 : F) / F, 0), 1);
+      e[i] = Math.max(0, ((lightInk ? d[i * 4] : 255 - d[i * 4]) / 255 - PAPER) / (1 - PAPER)) * PHOTO_DEPTH * t * t * (3 - 2 * t);
+    }
+  } else for (let i = 0; i < W * H; i++) e[i] = (lightInk ? d[i * 4] : 255 - d[i * 4]) / 255 * DEPTH;
   const out = new Uint8Array(W * H);
   if (p.kind === "drawing") {
     for (let i = 0; i < W * H; i++) out[i] = e[i] > BAYER[((i / W | 0) % 8) * 8 + (i % W) % 8] ? 1 : 0;
@@ -1471,7 +1501,7 @@ async function show(n, dissolve) {
   if (windows.has("picture")) named(p);
   const img = await load(p);
   if (g !== gen) return;
-  const next = dither(img, p, W, H);
+  const next = dither(img, p);
   if (dissolve) {
     for (let k = 1; k <= STEPS; k++) {
       await new Promise(r => setTimeout(r, STEP_MS));

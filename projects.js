@@ -36,56 +36,68 @@ window.SITE = {
     "I used to work at LM Studio.",
   ],
   // Desktop pictures. One is picked at random, and every few minutes another dissolves in.
+  // id names the picture for next.
+  // next lists the pictures that rhyme with this one; the next to dissolve in is one of them, at random.
   // title and page are what Desktop > About This Picture… shows and links to: the picture's source page.
-  // position is where the picture sits in the spare room, as in CSS object-position (0 to 1).
-  // kind "photo" covers the desk with Floyd-Steinberg; "drawing" is fitted whole with an ordered dither.
+  // position is the point of the picture (0 to 1 across and down) where its subject is; the desk puts it
+  // in the middle of the room, the open part of the desk beside the icons and right of where windows open.
+  // kind "photo" covers the room with Floyd-Steinberg; "drawing" is fitted whole with an ordered dither.
   // marks is what the dots draw: "dark" parts, "light" parts, or "theme" (dark parts in light mode, light parts in dark mode).
   // Drawings mark their dark lines. Photos of space mark the lit parts, so space stays empty in both modes.
   // All public domain, from Wikimedia Commons.
   pictures: [
     {
-      src: "media/desktop/kepler.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark",
+      id: "kepler", next: ["galileo", "tesla"],
+      src: "media/desktop/kepler.jpg", position: [0.5, 0.5], kind: "drawing", marks: "dark",
       title: "Kepler's model of the solar system, 1596",
       page: "https://commons.wikimedia.org/wiki/File:Mysterium_Cosmographicum_solar_system_model.jpg",
     },
     {
-      src: "media/desktop/galileo.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark",
+      id: "galileo", next: ["hooke", "eagle"],
+      src: "media/desktop/galileo.jpg", position: [0.5, 0.5], kind: "drawing", marks: "dark",
       title: "Galileo's drawings of the Moon, 1609",
       page: "https://commons.wikimedia.org/wiki/File:Galileo%27s_sketches_of_the_moon.png",
     },
     {
-      src: "media/desktop/hooke.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark",
+      id: "hooke", next: ["cajal", "ingenuity"],
+      src: "media/desktop/hooke.jpg", position: [0.5, 0.5], kind: "drawing", marks: "dark",
       title: "A flea, from Hooke's Micrographia, 1665",
       page: "https://commons.wikimedia.org/wiki/File:HookeFlea01.jpg",
     },
     {
-      src: "media/desktop/cajal.jpg", position: [0.8, 0.5], kind: "drawing", marks: "dark",
+      id: "cajal", next: ["tesla", "eniac"],
+      src: "media/desktop/cajal.jpg", position: [0.5, 0.5], kind: "drawing", marks: "dark",
       title: "Purkinje neurons, drawn by Ramón y Cajal, 1899",
       page: "https://commons.wikimedia.org/wiki/File:PurkinjeCell.jpg",
     },
     {
-      src: "media/desktop/tesla.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme",
+      id: "tesla", next: ["eniac", "cajal"],
+      src: "media/desktop/tesla.jpg", position: [0.35, 0.55], kind: "photo", marks: "theme",
       title: "Tesla's lab in Colorado Springs, 1899",
       page: "https://commons.wikimedia.org/wiki/File:Tesla_colorado_adjusted.jpg",
     },
     {
-      src: "media/desktop/eniac.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme",
+      id: "eniac", next: ["edwhite", "kepler"],
+      src: "media/desktop/eniac.jpg", position: [0.42, 0.55], kind: "photo", marks: "theme",
       title: "ENIAC, 1946",
       page: "https://commons.wikimedia.org/wiki/File:Classic_shot_of_the_ENIAC_(full_resolution).jpg",
     },
     {
-      src: "media/desktop/edwhite.jpg", position: [0.5, 0.5], kind: "photo", marks: "light",
+      id: "edwhite", next: ["eagle", "galileo"],
+      src: "media/desktop/edwhite.jpg", position: [0.42, 0.52], kind: "photo", marks: "light",
       title: "Ed White, the first American spacewalk, 1965",
       page: "https://commons.wikimedia.org/wiki/File:Ed_White_performs_first_U.S._spacewalk_-_GPN-2006-000025-crop.jpg",
     },
     {
-      src: "media/desktop/eagle.jpg", position: [0.5, 0.5], kind: "photo", marks: "light",
+      id: "eagle", next: ["ingenuity", "hooke"],
+      src: "media/desktop/eagle.jpg", position: [0.54, 0.5], kind: "photo", marks: "light",
       title: "The Apollo 11 lander Eagle over the Moon, 1969",
       page: "https://commons.wikimedia.org/wiki/File:Apollo_11_Lunar_Module_Eagle_in_landing_configuration_in_lunar_orbit_from_the_Command_and_Service_Module_Columbia.jpg",
     },
     {
-      src: "media/desktop/ingenuity.jpg", position: [0.5, 0.5], kind: "photo", marks: "theme",
-      title: "Ingenuity's shadow on its first flight on Mars, 2021",
+      id: "ingenuity", next: ["kepler", "edwhite"],
+      src: "media/desktop/ingenuity.jpg", position: [0.49, 0.45], kind: "photo", marks: "dark",
+      title: "Ingenuity's shadow on Mars, from its first flight, 2021",
       page: "https://commons.wikimedia.org/wiki/File:Ingenuity%27s_First_Black-and-White_Image_From_the_Air.jpg",
     },
   ],

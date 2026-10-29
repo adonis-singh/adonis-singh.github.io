@@ -201,7 +201,7 @@ window.PROJECTS = [
     id: "re4",
     name: "Resident Evil 4 decompilation",
     year: 2026,
-    blurb: "A 2004 GameCube prototype, rebuilt byte for byte from C and C++.",
+    blurb: "A 2004 GameCube prototype, rebuilt byte for byte.",
     body: [
       "A full decompilation of a Resident Evil 4 prototype for GameCube, dated November 25, 2004. Its discs came with symbol files that name every function. The result is 570,000 lines of C and C++ that, built with the compilers Capcom used, produce the original game files byte for byte.",
     ],

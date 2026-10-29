@@ -317,11 +317,11 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 /* Get Info: the rows in a box, their labels right-aligned. */
 .getinfo { margin: 16px 0 0; border: 1px solid var(--ink); }
 .info { display: grid; grid-template-columns: max-content 1fr; align-items: baseline; gap: 0 12px; margin: 0; padding: 8px 12px; line-height: 20px; }
-.info dt, .content h3 { font-family: "Ark Pixel 12 Bold", monospace; font-size: 12px; font-weight: normal; }
+.info dt, .posts { font-family: "Ark Pixel 12 Bold", monospace; font-size: 12px; font-weight: normal; }
 .info dt { text-align: right; }
 .info dt::after { content: ":"; }
 .info dd { margin: 0; }
-.content h3 { margin: 16px 0 0; line-height: 20px; }
+.posts { margin: 16px 0 0; line-height: 20px; }   /* "Posts on X", labelled like Get Info's rows */
 .tweets { margin: 4px 0 0; padding: 0; list-style: none; line-height: 20px; }
 .tweets li { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
 .tweets li + li { margin-top: 4px; }
@@ -766,7 +766,7 @@ menubar.append(menuList);
 
 // Links marked bar are also on the bar itself, one click away.
 const extras = el("div", { className: "extras" });
-extras.addEventListener("pointerdown", closeMenu);   // the shield is under the bar, so it can't
+extras.addEventListener("pointerdown", closeMenu);   // the menu's shield is under the bar, so it can't take these presses
 for (const l of SITE.links.filter(l => l.bar)) extras.append(ext({ className: "link", href: l.href }, el("span", { textContent: l.label })));
 menubar.append(extras);
 
@@ -1122,7 +1122,7 @@ function content(item) {
   if (item.make) c.append(...item.make());
   if (item.info) c.append(el("div", { className: "getinfo" }, el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })]))));
   // A date is shown once for the posts made on it.
-  if (item.tweets && item.tweets.length) c.append(el("h3", { textContent: "Posts on X" }), el("ul", { className: "tweets" }, item.tweets.map((t, i) => el("li", {}, [
+  if (item.tweets && item.tweets.length) c.append(el("h3", { className: "posts", textContent: "Posts on X" }), el("ul", { className: "tweets" }, item.tweets.map((t, i) => el("li", {}, [
     el("span", { className: "date", textContent: i && item.tweets[i - 1].date === t.date ? "" : t.date }), ext({ href: t.href, textContent: t.text }),
   ]))));
   if (item.links.length) c.append(el("div", { className: "buttons" }, item.links.map(l => {

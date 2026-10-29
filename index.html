@@ -404,8 +404,6 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 .run canvas { position: relative; display: block; margin: 0 auto; image-rendering: pixelated; filter: var(--invert); }
 .run.paused .i-play { display: block; }
 .run.paused .i-pause { display: none; }
-.run .controls { gap: 0; touch-action: none; }
-.run .clock { flex: 1; padding-left: 8px; }
 .run + p { margin-top: -4px; }
 /* About This Picture */
 .window:where([data-id="picture"]) { width: min(400px, calc(100vw - 24px)); }
@@ -486,6 +484,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 }
 @media (max-width: 480px) {
   .frame .word { display: none; }   /* "213 of 375", so the seek bar keeps its room */
+  .run .tick { display: none; }     /* the run's clock says it */
 }
 @media (max-width: 360px) {
   .title, .menubar .link { padding-inline: 6px; }
@@ -867,11 +866,14 @@ const playSvg = '<svg class="i-play" viewBox="0 0 10 10"><path d="M2 0h1v10H2zM3
 function player(src, poster, name, frames) {
   const video = el("video", { src, poster: poster || "", muted: true, loop: true, playsInline: true, preload: "none" });
   video.setAttribute("aria-label", name);
-  const fill = el("span");
   const btn = el("button", { className: "play", type: "button", innerHTML: playSvg });
   btn.setAttribute("aria-label", "Play");
-  const track = el("div", { className: "track", tabIndex: 0 }, el("div", { className: "scrub" }, fill));
-  for (const [k, v] of [["role", "slider"], ["aria-label", "Seek"], ["aria-valuemin", "0"], ["aria-valuemax", "100"], ["aria-valuenow", "0"]]) track.setAttribute(k, v);
+  // Seeking needs the duration, so it starts with the metadata. The arrows seek by two seconds.
+  const track = seekBar({
+    now: () => video.currentTime / video.duration,
+    step: () => 2 / video.duration,
+    go: (f) => { if (video.duration) { video.currentTime = f * video.duration; show(); } },
+  });
   const controls = el("div", { className: "controls" }, [btn, track]);
   const wrap = el("div", { className: "player paused" }, [video, controls]);
   if (frames) {
@@ -879,35 +881,17 @@ function player(src, poster, name, frames) {
     btn.after(back, forward);
     controls.append(counter);
   }
+  const show = () => track.show(video.currentTime / video.duration, `${video.currentTime.toFixed(1)} of ${video.duration.toFixed(1)} seconds`);
   const tick = () => {
-    const pct = (video.currentTime / video.duration) * 100;
-    fill.style.width = pct + "%";
-    track.setAttribute("aria-valuenow", Math.round(pct));
+    show();
     if (!video.paused) requestAnimationFrame(tick);
   };
   video.addEventListener("play", () => { wrap.classList.remove("paused"); btn.setAttribute("aria-label", "Pause"); requestAnimationFrame(tick); });
   video.addEventListener("pause", () => { wrap.classList.add("paused"); btn.setAttribute("aria-label", "Play"); });
-  video.addEventListener("seeked", tick);
+  video.addEventListener("seeked", show);
   wrap.toggle = () => { wrap.userPaused = !video.paused; video.paused ? video.play() : video.pause(); };
   btn.addEventListener("click", wrap.toggle);
   video.addEventListener("click", wrap.toggle);
-  // Press anywhere along the bar and drag to scrub. Seeking needs the duration, so it starts with the metadata.
-  const seek = (e) => {
-    const r = track.firstChild.getBoundingClientRect();
-    const t = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    fill.style.width = t * 100 + "%";
-    video.currentTime = t * video.duration;
-  };
-  video.addEventListener("loadedmetadata", () => {
-    track.addEventListener("pointerdown", e => { track.setPointerCapture(e.pointerId); seek(e); });
-    track.addEventListener("pointermove", e => { if (track.hasPointerCapture(e.pointerId)) seek(e); });
-    track.addEventListener("keydown", e => {
-      const to = { ArrowLeft: video.currentTime - 2, ArrowRight: video.currentTime + 2, Home: 0, End: video.duration }[e.key];
-      if (to === undefined) return;
-      e.preventDefault();
-      video.currentTime = Math.min(video.duration, Math.max(0, to));
-    });
-  }, { once: true });
   // Play only while on screen, and never if the visitor paused it or prefers no motion. It loads
   // only once it plays, and the first desk picture loads first, so on a slow network a window
   // opened from a link doesn't leave the desk blank.
@@ -918,6 +902,35 @@ function player(src, poster, name, frames) {
   }).observe(video);
   return wrap;
 }
+// A seek bar, a slider from 0 to 1: press anywhere along it and drag to scrub; the arrow keys move it
+// by step(), Page Up and Page Down by a tenth, and Home and End go to the ends. now() is where the
+// movie or run is, go(f) seeks it to f, and show(f, text) moves the bar there.
+function seekBar({ now, step, go }) {
+  const fill = el("span");
+  const track = attrs(el("div", { className: "track", tabIndex: 0 }, el("div", { className: "scrub" }, fill)), { role: "slider", "aria-label": "Seek", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": "0" });
+  const to = (f) => go(Math.min(1, Math.max(0, f)));
+  const at = (e) => { const r = track.firstChild.getBoundingClientRect(); return (e.clientX - r.left) / r.width; };
+  track.addEventListener("pointerdown", e => { track.setPointerCapture(e.pointerId); to(at(e)); });
+  track.addEventListener("pointermove", e => { if (track.hasPointerCapture(e.pointerId)) to(at(e)); });
+  track.addEventListener("keydown", e => {
+    const f = now(), s = step();
+    const t = { ArrowLeft: f - s, ArrowDown: f - s, ArrowRight: f + s, ArrowUp: f + s, PageDown: f - 0.1, PageUp: f + 0.1, Home: 0, End: 1 }[e.key];
+    if (t === undefined) return;
+    e.preventDefault();
+    to(t);
+  });
+  track.show = (f, text) => { fill.style.width = f * 100 + "%"; attrs(track, { "aria-valuenow": Math.round(f * 100), "aria-valuetext": text }); };
+  return track;
+}
+// ◀| and |▶, stepping a movie or run back or forward one frame or tick with wrap.step(d).
+const steps = (wrap, unit) => [
+  ["Back one " + unit, -1, "M1 4h1v2H1zM2 3h1v4H2zM3 2h1v6H3zM4 1h1v8H4zM5 0h1v10H5zM7 0h2v10H7z"],
+  ["Forward one " + unit, 1, "M1 0h2v10H1zM4 0h1v10H4zM5 1h1v8H5zM6 2h1v6H6zM7 3h1v4H7zM8 4h1v2H8z"],
+].map(([label, d, path]) => {
+  const b = attrs(el("button", { className: "step", type: "button", innerHTML: `<svg viewBox="0 0 10 10"><path d="${path}" fill="currentColor"/></svg>` }), { "aria-label": label });
+  b.addEventListener("click", () => wrap.step(d));
+  return b;
+});
 // "Frame 59 of 300", holding the width of "Frame 300 of 300" so the seek bar beside it keeps still.
 // The word goes on narrow screens.
 function counted(className, word, n, count) {
@@ -946,20 +959,11 @@ function stepper(wrap, video, { rate, count }) {
     frame = Math.min(count - 1, Math.max(0, frame + d));
     video.currentTime = (frame + 0.5) / rate;
   };
-  const button = (label, d, path) => {
-    const b = el("button", { className: "step", type: "button", innerHTML: `<svg viewBox="0 0 10 10"><path d="${path}" fill="currentColor"/></svg>` });
-    b.setAttribute("aria-label", label);
-    b.addEventListener("click", () => wrap.step(d));
-    return b;
-  };
-  return [
-    button("Back one frame", -1, "M1 4h1v2H1zM2 3h1v4H2zM3 2h1v6H3zM4 1h1v8H4zM5 0h1v10H5zM7 0h2v10H7z"),   // ◀|
-    button("Forward one frame", 1, "M1 0h2v10H1zM4 0h1v10H4zM5 1h1v8H5zM6 2h1v6H6zM7 3h1v4H7zM8 4h1v2H8z"),   // |▶
-    counter,
-  ];
+  return [...steps(wrap, "frame"), counter];
 }
 // A car's path from above, drawn one tick at a time at the recording's own tick rate, then held
-// for two seconds and drawn again. The whole of the first path is drawn faintly underneath, every
+// for two seconds and drawn again. It waits on its first tick for the play button, so it doesn't
+// move at the same time as the movie above it, and has the movie's controls: a seek bar and steps. The whole of the first path is drawn faintly underneath, every
 // other pixel, with a ring where it starts and a checker where it finishes. The first path is a
 // line ending in a dot; each other path is a square on its own position, so where they agree the
 // dot sits in the middle of the square. One art pixel is 2 CSS pixels, drawn in black and inverted
@@ -976,11 +980,12 @@ function run(r) {
   const clock = el("span", { className: "clock", textContent: "0.000 s" });
   const n = el("span", { textContent: "0" });
   const map = el("div", { className: "map" }, canvas);
-  const controls = el("div", { className: "controls" }, [btn, clock]);
+  const track = seekBar({ now: () => tick / count, step: () => 1 / count, go: (f) => to(Math.round(f * count)) });
+  const controls = el("div", { className: "controls" }, btn);
   const wrap = el("div", { className: "run paused" }, [map, controls]);
   const note = el("p", { textContent: r.caption });
   let paths, count, tickMs, box, px, line;   // positions per path; ticks to the finish; their extent; pixels per path; the first path's pixels in order, each with the tick it is reached on
-  let tick = 0, from = 0, playing = false, userPaused = false;
+  let tick = 0, from = 0, playing = false, userPaused = true;
 
   const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -999,6 +1004,7 @@ function run(r) {
     }
     clock.textContent = (tick * tickMs / 1000).toFixed(3) + " s";
     n.textContent = tick;
+    track.show(tick / count, `Tick ${tick} of ${count}, ${clock.textContent}`);
   };
   // Fit the paths into whole art pixels, x across and z up, with the same scale both ways.
   const fit = () => {
@@ -1046,25 +1052,14 @@ function run(r) {
   const toggle = () => { userPaused = playing; play(!playing); };
   btn.addEventListener("click", toggle);
   map.addEventListener("click", toggle);
-  // Press along the controls and drag to scrub, as in the movie player; it pauses the run.
-  const scrub = (e) => {
-    const r = clock.getBoundingClientRect();
-    tick = Math.round(Math.min(1, Math.max(0, (e.clientX - r.left) / (controls.getBoundingClientRect().right - r.left))) * count);
-    draw();
-  };
-  controls.addEventListener("pointerdown", e => {
-    if (e.target.closest(".play") || !paths) return;
-    userPaused = true;
-    play(false);
-    controls.setPointerCapture(e.pointerId);
-    scrub(e);
-  });
-  controls.addEventListener("pointermove", e => { if (controls.hasPointerCapture(e.pointerId)) scrub(e); });
+  // Seeking or stepping pauses the run.
+  const to = (t) => { userPaused = true; play(false); tick = t; draw(); };
+  wrap.step = (d) => to(Math.min(count, Math.max(0, tick + d)));
 
   fetch(r.src).then(res => res.json()).then(d => {
     ({ paths, tickMs } = d);
     count = paths[0].length / 3;
-    controls.append(counted("tick", "Tick ", n, count));
+    controls.append(...steps(wrap, "tick"), track, clock, counted("tick", "Tick ", n, count));
     const xs = paths.flatMap(p => p.filter((v, i) => i % 3 === 0)), zs = paths.flatMap(p => p.filter((v, i) => i % 3 === 2));
     box = { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
     wrap.style.setProperty("--aspect", Math.min(RUN_ASPECT[1], Math.max(RUN_ASPECT[0], (box.x1 - box.x0) / (box.z1 - box.z0))));
@@ -1072,8 +1067,8 @@ function run(r) {
     note.textContent = `${r.caption} They are at exactly the same position on ${same === count ? "all " + count : same + " of " + count} ticks.`;
     if (still) tick = count;   // no motion: the whole path, at the finish
     new ResizeObserver(fit).observe(map);
-    // Play only while on screen, and never if the visitor paused it or prefers no motion.
-    new IntersectionObserver(([e]) => play(e.isIntersecting && !userPaused && !still)).observe(map);
+    // Play only while on screen, once the visitor has played it.
+    new IntersectionObserver(([e]) => play(e.isIntersecting && !userPaused)).observe(map);
   });
   return [wrap, note];
 }
@@ -1354,14 +1349,14 @@ document.addEventListener("keydown", e => {
   e.preventDefault();
   player.toggle();
 });
-// , and . step the front window's video by a frame, and so do ← and → while it is paused.
-// On the seek bar, ← and → keep seeking by two seconds.
+// , and . step the front window's video by a frame, or its run by a tick, and so do ← and → while
+// it is paused. On a seek bar, ← and → keep seeking by its own step.
 document.addEventListener("keydown", e => {
   const d = { ",": -1, ".": 1, ArrowLeft: -1, ArrowRight: 1 }[e.key];
   if (!d || e.altKey || e.ctrlKey || e.metaKey || e.target.closest("input, textarea")) return;
-  const player = document.querySelector(".window.front .player");
-  if (!player || !player.step) return;
-  if (e.key.startsWith("Arrow") && (!player.querySelector("video").paused || e.target.closest("[role=slider]"))) return;
+  const player = [...document.querySelectorAll(".window.front :is(.player, .run)")].find(p => p.step);
+  if (!player) return;
+  if (e.key.startsWith("Arrow") && (!player.classList.contains("paused") || e.target.closest("[role=slider]"))) return;
   e.preventDefault();
   player.step(d);
 });

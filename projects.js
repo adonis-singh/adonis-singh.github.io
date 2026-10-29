@@ -12,6 +12,12 @@
 //   tweets  [{ date, text, href }] links to tweets about the project
 //   thumb   poster frame for the video
 //   video   optional looping muted clip
+//   frames  optional { rate, count } of the video, as ffprobe gives them: adds step buttons, a frame counter,
+//           and the , . keys (and ← → while paused) for stepping one frame
+//   run     optional { src, caption }: a car's path from above, drawn tick by tick in real time.
+//           src is JSON { tickMs, paths: [[x, y, z, ...], ...] }, a position per tick up to the finish for
+//           each path. The first path is drawn as a line with a dot, the others as a square on their
+//           own position. caption goes under it, followed by how many ticks all paths agree on.
 //   images  optional extra images [{ src, thumb, alt }]; thumb is a 240px square crop for the window's composite,
 //           and the images window shows src
 //   scores  { page, source, top }: the top models from an EyeBench leaderboard's data file, each at its
@@ -168,6 +174,8 @@ window.PROJECTS = [
     ],
     thumb: "media/trevorswing.jpg",
     video: "media/trevorswing.mp4",
+    // The clip was cut at 24 fps and exported at 30, which repeated every fifth frame; it is re-encoded at 24.
+    frames: { rate: 24, count: 300 },
     links: [],
   },
   {
@@ -217,6 +225,11 @@ window.PROJECTS = [
     ],
     thumb: "media/tmnf.jpg",
     video: "media/tmnf.mp4",
+    // The A04 policy lap from the README, captured in the game and replayed by TMNF-C (policy_validation/a04_5900).
+    run: {
+      src: "media/tmnf-a04-5900.json",
+      caption: "A04-Acrobatic from above. A policy trained with pure RL drove it in 5.900 s; the author time is 5.950 s. The line is the car in the real game, and the square is TMNF-C given the same inputs.",
+    },
     links: [{ label: "Code", href: "https://github.com/adonis-singh/TMNF-C" }],
   },
 ];

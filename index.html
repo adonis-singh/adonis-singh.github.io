@@ -317,9 +317,12 @@ a { color: inherit; }
 .player { margin: 4px 0 14px; border: 1px solid var(--ink); }
 .player video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
 .controls { display: flex; align-items: center; gap: 8px; height: 22px; padding: 0 6px 0 0; border-top: 1px solid var(--ink); }
-.play { display: grid; place-items: center; width: 28px; height: 21px; padding: 0; border: 0; border-right: 1px solid var(--ink); background: var(--win); cursor: default; }
-.play:active { background: var(--ink); color: var(--win); }
-.play svg { display: block; width: 10px; height: 10px; shape-rendering: crispEdges; }
+.play, .step { display: grid; place-items: center; flex: none; width: 28px; height: 21px; padding: 0; border: 0; border-right: 1px solid var(--ink); background: var(--win); cursor: default; }
+.play:active, .step:active { background: var(--ink); color: var(--win); }
+.play svg, .step svg { display: block; width: 10px; height: 10px; shape-rendering: crispEdges; }
+.controls .step { margin-left: -8px; }   /* step buttons sit flush against play */
+.frame { flex: none; white-space: nowrap; }
+.frame .n { display: inline-block; text-align: right; }
 .play .i-play { display: none; }
 .player.paused .i-play { display: block; }
 .player.paused .i-pause { display: none; }
@@ -327,6 +330,22 @@ a { color: inherit; }
 .scrub { flex: 1; height: 10px; border: 1px solid var(--ink); pointer-events: none; }
 .scrub span { display: block; width: 0; height: 100%; background: var(--ink); }
 .player video { cursor: default; }
+
+/* Run viewer: a car's path from above, drawn a tick at a time */
+.run { margin: 4px 0 14px; border: 1px solid var(--ink); }
+.run .map { aspect-ratio: 16 / 9; }
+.run canvas { display: block; margin: 0 auto; image-rendering: pixelated; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .run canvas { filter: invert(1); }
+}
+:root[data-theme="dark"] .run canvas { filter: invert(1); }
+.run.paused .i-play { display: block; }
+.run.paused .i-pause { display: none; }
+.run .controls { gap: 0; }
+.run .clock { flex: 1; padding-left: 8px; white-space: nowrap; }
+.run .tick { white-space: nowrap; }
+.run .tick .n { display: inline-block; text-align: right; }
+.run + p { margin-top: -6px; }
 
 /* Zoom rectangles */
 .zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
@@ -352,6 +371,9 @@ a { color: inherit; }
   .scores li { grid-template-columns: 1fr 40px; gap: 0 12px; margin-bottom: 6px; }
   .scores .bar { grid-column: 1 / -1; grid-row: 2; }
 }
+@media (max-width: 480px) {
+  .frame .word { display: none; }   /* "213 of 375", so the seek bar keeps its room */
+}
 @media (max-width: 360px) {
   .menubar { font-size: 15px; }
   .menubar a { padding: 0 5px; }
@@ -365,7 +387,7 @@ a { color: inherit; }
   .tweets li { padding: 4px 0; }
   .menubar a { min-width: 36px; text-align: center; }
   .controls { height: 34px; }
-  .play { width: 44px; height: 33px; }
+  .play, .step { width: 44px; height: 33px; }
 }
 
 /* Print: only the plain sheet that printSheet() builds, black on white. */
@@ -397,7 +419,7 @@ a { color: inherit; }
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=e6ce98cb66"></script>
+<script src="projects.js?v=af24d8663c"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -543,16 +565,22 @@ function zoom(from, to, done) {
 }
 
 /* Window content */
-function player(src, poster, name) {
+const playSvg = '<svg class="i-play" viewBox="0 0 10 10"><path d="M2 0h1v10H2zM3 1h1v8H3zM4 2h1v6H4zM5 3h1v4H5zM6 4h1v2H6z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 10 10"><path d="M1 0h3v10H1zM6 0h3v10H6z" fill="currentColor"/></svg>';
+function player(src, poster, name, frames) {
   const video = el("video", { src, poster: poster || "", muted: true, loop: true, playsInline: true, preload: "metadata" });
   video.setAttribute("aria-label", name);
   const fill = el("span");
-  const playSvg = '<svg class="i-play" viewBox="0 0 10 10"><path d="M2 0h1v10H2zM3 1h1v8H3zM4 2h1v6H4zM5 3h1v4H5zM6 4h1v2H6z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 10 10"><path d="M1 0h3v10H1zM6 0h3v10H6z" fill="currentColor"/></svg>';
   const btn = el("button", { className: "play", type: "button", innerHTML: playSvg });
   btn.setAttribute("aria-label", "Play");
   const track = el("div", { className: "track", tabIndex: 0 }, el("div", { className: "scrub" }, fill));
   for (const [k, v] of [["role", "slider"], ["aria-label", "Seek"], ["aria-valuemin", "0"], ["aria-valuemax", "100"], ["aria-valuenow", "0"]]) track.setAttribute(k, v);
-  const wrap = el("div", { className: "player paused" }, [video, el("div", { className: "controls" }, [btn, track])]);
+  const controls = el("div", { className: "controls" }, [btn, track]);
+  const wrap = el("div", { className: "player paused" }, [video, controls]);
+  if (frames) {
+    const [back, forward, counter] = stepper(wrap, video, frames);
+    btn.after(back, forward);
+    controls.append(counter);
+  }
   const tick = () => {
     const pct = (video.currentTime / video.duration) * 100;
     fill.style.width = pct + "%";
@@ -588,6 +616,134 @@ function player(src, poster, name) {
     else video.pause();
   }).observe(video);
   return wrap;
+}
+// Frame stepping, for a video whose frame rate and frame count are known. Steps seek to the
+// middle of a frame, so rounding can never land on its neighbour. The counter shows the frame
+// that is on screen, as the video reports it for each frame it presents.
+function stepper(wrap, video, { rate, count }) {
+  let frame = 0;   // the frame on screen, or the one a step is seeking to
+  const n = el("span", { className: "n", textContent: "1" });
+  n.style.minWidth = String(count).length + "ch";
+  const counter = el("span", { className: "frame" }, [el("span", { className: "word", textContent: "Frame " }), n, ` of ${count}`]);
+  const shown = (now, m) => {
+    if (!video.seeking) frame = Math.round(m.mediaTime * rate);
+    n.textContent = Math.round(m.mediaTime * rate) + 1;
+    video.requestVideoFrameCallback(shown);
+  };
+  video.requestVideoFrameCallback(shown);
+  // After a seek, the frame on screen is the one whose time span holds currentTime.
+  video.addEventListener("seeked", () => { frame = Math.min(count - 1, Math.floor(video.currentTime * rate + 1e-6)); });
+  wrap.step = (d) => {
+    wrap.userPaused = true;
+    video.pause();
+    frame = Math.min(count - 1, Math.max(0, frame + d));
+    video.currentTime = (frame + 0.5) / rate;
+  };
+  const button = (label, d, path) => {
+    const b = el("button", { className: "step", type: "button", innerHTML: `<svg viewBox="0 0 10 10"><path d="${path}" fill="currentColor"/></svg>` });
+    b.setAttribute("aria-label", label);
+    b.addEventListener("click", () => wrap.step(d));
+    return b;
+  };
+  return [
+    button("Back one frame", -1, "M1 0h2v10H1zM4 4h1v2H4zM5 3h1v4H5zM6 2h1v6H6zM7 1h1v8H7zM8 0h1v10H8z"),
+    button("Forward one frame", 1, "M1 0h1v10H1zM2 1h1v8H2zM3 2h1v6H3zM4 3h1v4H4zM5 4h1v2H5zM7 0h2v10H7z"),
+    counter,
+  ];
+}
+// A car's path from above, drawn one tick at a time at the recording's own tick rate, then held
+// for two seconds and drawn again. The first path is a line ending in a dot; each other path is a
+// square on its own position, so where they agree the dot sits in the middle of the square.
+// One art pixel is 2 CSS pixels, drawn in black and inverted in dark mode.
+function run(r) {
+  const HOLD = 2000;
+  const canvas = el("canvas");
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", "The car's path, seen from above");
+  const ctx = canvas.getContext("2d");
+  const btn = el("button", { className: "play", type: "button", innerHTML: playSvg });
+  btn.setAttribute("aria-label", "Play");
+  const clock = el("span", { className: "clock", textContent: "0.000" });
+  const n = el("span", { className: "n", textContent: "0" });
+  const ticks = el("span", { className: "tick" });
+  const map = el("div", { className: "map" }, canvas);
+  const wrap = el("div", { className: "run paused" }, [map, el("div", { className: "controls" }, [btn, clock, ticks])]);
+  const note = el("p", { textContent: r.caption });
+  let paths, count, tickMs, px;   // positions per path; ticks to the finish; pixels per path
+  let tick = 0, from = 0, playing = false, userPaused = false;
+
+  const draw = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const head = Math.max(0, tick - 1);   // tick t is the car after t ticks, the t-th record
+    const [line, ...boxes] = px;
+    let [x0, y0] = line[0];
+    ctx.fillRect(x0, y0, 1, 1);
+    for (let i = 1; i <= head; i++) {   // Bresenham, so the line is one pixel wide and unbroken
+      const [x1, y1] = line[i];
+      const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+      for (let err = dx + dy; x0 !== x1 || y0 !== y1;) {
+        const e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x0 += sx; }
+        if (e2 <= dx) { err += dx; y0 += sy; }
+        ctx.fillRect(x0, y0, 1, 1);
+      }
+    }
+    ctx.fillRect(x0 - 1, y0 - 1, 3, 3);
+    for (const b of boxes) {
+      const [x, y] = b[head];
+      ctx.fillRect(x - 4, y - 4, 9, 1); ctx.fillRect(x - 4, y + 4, 9, 1);
+      ctx.fillRect(x - 4, y - 3, 1, 7); ctx.fillRect(x + 4, y - 3, 1, 7);
+    }
+    clock.textContent = (tick * tickMs / 1000).toFixed(3);
+    n.textContent = tick;
+  };
+  // Fit the paths into whole art pixels, x across and z up, with the same scale both ways.
+  const fit = () => {
+    const W = Math.floor(map.clientWidth / 2), H = Math.floor(W * 9 / 16), m = 8;
+    Object.assign(canvas, { width: W, height: H });
+    Object.assign(canvas.style, { width: W * 2 + "px", height: H * 2 + "px" });
+    const xs = paths.flatMap(p => p.filter((v, i) => i % 3 === 0)), zs = paths.flatMap(p => p.filter((v, i) => i % 3 === 2));
+    const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
+    const s = Math.min((W - 2 * m) / (x1 - x0), (H - 2 * m) / (z1 - z0));
+    const ox = (W - (x1 - x0) * s) / 2, oy = (H - (z1 - z0) * s) / 2;
+    px = paths.map(p => Array.from({ length: count }, (_, i) => [Math.round(ox + (p[3 * i] - x0) * s), Math.round(H - oy - (p[3 * i + 2] - z0) * s)]));
+    draw();
+  };
+  const frame = (now) => {
+    if (!playing || !wrap.isConnected) return;
+    if (now - from > count * tickMs + HOLD) from = now;
+    const t = Math.min(count, Math.floor((now - from) / tickMs));
+    if (t !== tick) { tick = t; draw(); }
+    requestAnimationFrame(frame);
+  };
+  const play = (on) => {
+    if (on === playing) return;
+    playing = on;
+    wrap.classList.toggle("paused", !on);
+    btn.setAttribute("aria-label", on ? "Pause" : "Play");
+    if (on) {
+      if (tick === count) tick = 0;   // a finished run starts again
+      from = performance.now() - tick * tickMs;
+      requestAnimationFrame(frame);
+    }
+  };
+  const toggle = () => { userPaused = playing; play(!playing); };
+  btn.addEventListener("click", toggle);
+  map.addEventListener("click", toggle);
+
+  fetch(r.src).then(res => res.json()).then(d => {
+    ({ paths, tickMs } = d);
+    count = paths[0].length / 3;
+    ticks.append("Tick ", n, ` of ${count}`);
+    n.style.minWidth = String(count).length + "ch";
+    const same = Array.from({ length: count }, (_, i) => paths.every(p => [0, 1, 2].every(k => p[3 * i + k] === paths[0][3 * i + k]))).filter(Boolean).length;
+    note.textContent = `${r.caption} They are at exactly the same position on ${same} of ${count} ticks.`;
+    if (still) tick = count;   // no motion: the whole path, at the finish
+    new ResizeObserver(fit).observe(map);
+    // Play only while on screen, and never if the visitor paused it or prefers no motion.
+    new IntersectionObserver(([e]) => play(e.isIntersecting && !userPaused && !still)).observe(map);
+  });
+  return [wrap, note];
 }
 // The leaderboard's data file defines FRONTIER. It is loaded once; its runs come sorted by
 // model, then effort, so a model's last run is its highest tested effort.
@@ -635,7 +791,8 @@ function content(item) {
       return el("li", {}, b);
     })));
   }
-  if (item.video) c.append(player(item.video, item.thumb, item.name));
+  if (item.video) c.append(player(item.video, item.thumb, item.name, item.frames));
+  if (item.run) c.append(...run(item.run));
   if (item.images) {
     const b = el("button", { className: "composite", type: "button" }, item.images.map(i => el("img", { src: i.thumb, alt: i.alt })));
     b.setAttribute("aria-label", "Open " + item.name + " images");
@@ -780,6 +937,17 @@ document.addEventListener("keydown", e => {
   if (!player) return;
   e.preventDefault();
   player.toggle();
+});
+// , and . step the front window's video by a frame, and so do ← and → while it is paused.
+// On the seek bar, ← and → keep seeking by two seconds.
+document.addEventListener("keydown", e => {
+  const d = { ",": -1, ".": 1, ArrowLeft: -1, ArrowRight: 1 }[e.key];
+  if (!d || e.altKey || e.ctrlKey || e.metaKey || e.target.closest("input, textarea")) return;
+  const player = document.querySelector(".window.front .player");
+  if (!player || !player.step) return;
+  if (e.key.startsWith("Arrow") && (!player.querySelector("video").paused || e.target.closest("[role=slider]"))) return;
+  e.preventDefault();
+  player.step(d);
 });
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;

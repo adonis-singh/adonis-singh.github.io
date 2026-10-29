@@ -132,6 +132,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   text-decoration: none;
   white-space: nowrap;
 }
+.menubar span { position: relative; }
 .menubar .theme { margin-left: auto; }
 .menubar button {
   display: grid;
@@ -191,6 +192,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 .icon.selected:not(.open) .base, .icon:focus-visible:not(.open) .base, .icon.open .base { display: none; }
 .icon.selected:not(.open) .chosen, .icon:focus-visible:not(.open) .chosen, .icon.open .opened { display: block; }
 .icon .label {
+  position: relative;
   max-width: 100%;
   margin-top: 4px;
   padding: 0 4px;
@@ -234,7 +236,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   user-select: none;
 }
 .window.front .titlebar { background: repeating-linear-gradient(to bottom, var(--ink) 0 1px, var(--win) 1px 2px) content-box; }
-.titlebar h2 { margin: -2px 0; padding: 0 8px; background: var(--win); font: inherit; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* taller than the stripes, for descenders */
+.titlebar h2 { position: relative; margin: -2px 0; padding: 0 8px; background: var(--win); font: inherit; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* taller than the stripes, for descenders */
 .close {
   position: absolute;
   left: 8px;
@@ -304,6 +306,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   white-space: nowrap;
 }
 .btn:active, .btn:focus-visible { border-image-source: var(--btn-on); color: var(--win); }
+.btn span { position: relative; }
 .btn svg { margin-right: 8px; fill: currentColor; shape-rendering: crispEdges; }
 
 /* Scores */
@@ -449,29 +452,29 @@ const el = (tag, props = {}, kids = []) => {
   for (const k of [].concat(kids)) n.append(k);
   return n;
 };
-// Pixel fonts blur on half pixels. Centred text lands on one when the box and the text differ
-// in width by an odd number of pixels; one more pixel of padding moves it onto a whole one.
+// Pixel fonts blur off whole screen pixels. Centred text, or text in a grid of fractional
+// columns, often lands between two, so it is nudged left onto one.
 const snap = (n) => {
-  n.style.paddingRight = "";
-  const x = n.getBoundingClientRect().x - n.parentElement.getBoundingClientRect().x;
-  if (x % 1) n.style.paddingRight = `${parseFloat(getComputedStyle(n).paddingRight) + 1}px`;
+  n.style.left = "";
+  const f = n.getBoundingClientRect().x * devicePixelRatio % 1;
+  if (f) n.style.left = -f / devicePixelRatio + "px";
 };
-const SNAP = ".icon .label, .titlebar h2, .btn span";
+const SNAP = ".icon .label, .titlebar h2, .btn span, .menubar span";
 Promise.all([...document.fonts].map(f => f.load())).then(() => document.querySelectorAll(SNAP).forEach(snap));
-addEventListener("resize", () => document.querySelectorAll(".titlebar h2").forEach(snap));
+addEventListener("resize", () => document.querySelectorAll(SNAP).forEach(snap));
 
 /* Menu bar */
 const menubar = document.getElementById("menubar");
-const me = el("a", { className: "me", href: "#readme", textContent: SITE.name });
+const me = el("a", { className: "me", href: "#readme" }, el("span", { textContent: SITE.name }));
 me.addEventListener("click", e => { e.preventDefault(); open("readme", me); });
 menubar.append(el("li", {}, me));
-const ext = (props) => el("a", { target: "_blank", rel: "noopener", ...props });
+const ext = (props, kids) => el("a", { target: "_blank", rel: "noopener", ...props }, kids);
 // Button glyphs, drawn in pixels as tall as the button font's capitals.
 const glyphs = {
   mail: '<svg width="13" height="9" viewBox="0 0 13 9"><path d="M0 0h13v1H0zM0 1h3v1H0zM10 1h3v1H10zM0 2h2v6H0zM3 2h1v1H3zM9 2h1v1H9zM11 2h2v6H11zM4 3h1v1H4zM8 3h1v1H8zM5 4h1v1H5zM7 4h1v1H7zM6 5h1v1H6zM0 8h13v1H0z"/></svg>',
   x: '<svg width="10" height="9" viewBox="0 0 10 9"><path d="M0 0h2v1H0zM8 0h1v1H8zM1 1h2v1H1zM7 1h1v1H7zM2 2h2v1H2zM6 2h1v1H6zM3 3h3v1H3zM4 4h2v1H4zM3 5h1v1H3zM5 5h2v1H5zM2 6h1v1H2zM6 6h2v1H6zM1 7h1v1H1zM7 7h2v1H7zM0 8h1v1H0zM8 8h2v1H8z"/></svg>',
 };
-for (const l of SITE.links) menubar.append(el("li", {}, ext({ href: l.href, textContent: l.label })));
+for (const l of SITE.links) menubar.append(el("li", {}, ext({ href: l.href }, el("span", { textContent: l.label }))));
 
 /* Light and dark */
 const systemDark = matchMedia("(prefers-color-scheme: dark)");

@@ -41,9 +41,13 @@ window.SITE = {
   // title and page are what Desktop > About This Picture… shows and links to: the picture's source page.
   // position is the point of the picture (0 to 1 across and down) where its subject is; the desk puts it
   // in the middle of the room, the open part of the desk beside the icons and right of where windows open.
-  // kind "photo" covers the room with Floyd-Steinberg; "drawing" is fitted whole with an ordered dither.
+  // kind "photo" is drawn with Floyd-Steinberg in the middle of the room and fades into the paper toward its edges;
+  // "drawing" is fitted whole with an ordered dither.
   // marks is what the dots draw: "dark" parts, "light" parts, or "theme" (dark parts in light mode, light parts in dark mode).
   // Drawings mark their dark lines. Photos of space mark the lit parts, so space stays empty in both modes.
+  // Ingenuity's shadow is "theme", so it is dark in both modes.
+  // paper, optional for a photo: the share of the ink scale, palest first, that stays bare paper (0.3 if not set).
+  // A busy photo sets it higher so only its strongest tones draw.
   // All public domain, from Wikimedia Commons.
   pictures: [
     {
@@ -72,7 +76,7 @@ window.SITE = {
     },
     {
       id: "tesla", next: ["eniac", "cajal"],
-      src: "media/desktop/tesla.jpg", position: [0.35, 0.55], kind: "photo", marks: "theme",
+      src: "media/desktop/tesla.jpg", position: [0.35, 0.55], kind: "photo", marks: "theme", paper: 0.55,
       title: "Tesla's lab in Colorado Springs, 1899",
       page: "https://commons.wikimedia.org/wiki/File:Tesla_colorado_adjusted.jpg",
     },
@@ -96,7 +100,7 @@ window.SITE = {
     },
     {
       id: "ingenuity", next: ["kepler", "edwhite"],
-      src: "media/desktop/ingenuity.jpg", position: [0.49, 0.45], kind: "photo", marks: "dark",
+      src: "media/desktop/ingenuity.jpg", position: [0.49, 0.45], kind: "photo", marks: "theme",
       title: "Ingenuity's shadow on Mars, from its first flight, 2021",
       page: "https://commons.wikimedia.org/wiki/File:Ingenuity%27s_First_Black-and-White_Image_From_the_Air.jpg",
     },

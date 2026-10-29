@@ -371,6 +371,8 @@ const PX = 32; // icon art is drawn at 32x32 and shown at 64x64
 const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: SITE.contact, art: "doc" };
 const items = [readme, ...PROJECTS];
 const byId = new Map(items.map(p => [p.id, p]));
+// A project's images open in a window of their own, which belongs to the project's window.
+for (const p of PROJECTS) if (p.images) byId.set(p.id + "-images", { id: p.id + "-images", name: p.name + " images", pictures: p.images, links: [], wide: true, parent: p.id });
 const icons = new Map();
 const windows = new Map();
 let z = 1;
@@ -597,11 +599,9 @@ function content(item) {
   }
   if (item.video) c.append(player(item.video, item.thumb, item.name));
   if (item.images) {
-    const id = item.id + "-images";
     const b = el("button", { className: "composite", type: "button" }, item.images.map(i => el("img", { src: i.src, alt: i.alt })));
-    byId.set(id, { id, name: item.name + " images", pictures: item.images, links: [], wide: true, origin: b });
     b.setAttribute("aria-label", "Open " + item.name + " images");
-    b.addEventListener("click", () => open(id, b));
+    b.addEventListener("click", () => open(item.id + "-images", b));
     c.append(b);
   }
   if (item.pictures) c.append(el("div", { className: "pictures" }, item.pictures.map(i => el("figure", {}, [el("img", { src: i.src, alt: i.alt }), el("figcaption", { textContent: i.alt })]))));
@@ -633,6 +633,7 @@ function open(id, opener, entry) {
   if (!item) return;
   const icon = icons.get(id);
   if (icon) select(id);
+  if (item.parent && !windows.has(item.parent)) open(item.parent, null, entry);
   if (windows.has(id)) { const w = windows.get(id); front(w); w.body.focus(); return; }
   if (entry === undefined) { history.pushState({ n: ++here, id }, ""); entry = here; }
 
@@ -647,7 +648,7 @@ function open(id, opener, entry) {
   w.entry = entry;
   w.body = body;
   w.opener = opener;
-  w.origin = icon ? icon.querySelector("canvas") : item.origin;
+  w.origin = icon ? icon.querySelector("canvas") : windows.get(item.parent).querySelector(".composite");   // zoom from here
   w.setAttribute("aria-label", item.name);
   w.style.visibility = "hidden";
   desk.append(w);

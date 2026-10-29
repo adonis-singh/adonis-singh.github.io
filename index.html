@@ -827,6 +827,7 @@ for (const item of items) {
   });
   b.addEventListener("pointerup", e => { b.lastPointer = e.pointerType; });
   b.addEventListener("dblclick", () => open(item.id, b));
+  b.addEventListener("focus", () => select(item.id));   // one icon is highlighted at a time, whether by focus or a click
   icons.set(item.id, b);
   iconList.append(el("li", {}, b));
 }

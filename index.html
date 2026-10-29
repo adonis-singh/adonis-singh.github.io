@@ -1234,7 +1234,8 @@ function open(id, opener, entry) {
   icon?.classList.add("open");   // the Finder fills an open item's icon with grey
 
   // Cascade new windows from the top-left, keeping them on screen.
-  place(w, Math.min(24 + cascade * 24, desk.clientWidth - w.offsetWidth - 12), Math.min(16 + cascade * 24, desk.clientHeight - w.offsetHeight - 12));
+  w.at = [Math.min(24 + cascade * 24, desk.clientWidth - w.offsetWidth - 12), Math.min(16 + cascade * 24, desk.clientHeight - w.offsetHeight - 12)];
+  place(w);
   cascade = (cascade + 1) % 8;
   front(w);
 
@@ -1293,11 +1294,13 @@ function close(id, popped) {
 // Keep a window's close box, at least 120px of its title bar, and the whole height of the title bar
 // on the desk, below the menu bar, on whole pixels.
 const clamp = (w, left, top) => [Math.round(Math.max(0, Math.min(left, desk.clientWidth - 120))), Math.round(Math.max(0, Math.min(top, desk.clientHeight - w.firstChild.offsetHeight - 1)))];
+// A window keeps its own place, w.at, where it opened or was dragged to; a smaller desk only moves
+// it on screen, and it goes back there when the desk is big again.
 // A window that fits is capped from its top, so its bottom stays on the desk and content that loads
 // later scrolls instead of running off. One that is moved keeps its height and may run off the
 // bottom; it only grows if moved up.
-function place(w, left, top, keep) {
-  [left, top] = clamp(w, left, top);
+function place(w, keep) {
+  const [left, top] = clamp(w, ...w.at);
   const fit = desk.clientHeight - top - 12;
   w.style.left = left + "px";
   w.style.top = top + "px";
@@ -1308,7 +1311,7 @@ let deskHeight = desk.clientHeight;
 new ResizeObserver(() => {
   for (const w of windows.values()) {
     const top = parseFloat(w.style.top);   // where it sits on a big screen; phones show it full-screen
-    place(w, parseFloat(w.style.left), top, !phone.matches && top + w.offsetHeight > deskHeight - 12);
+    place(w, !phone.matches && top + w.offsetHeight > deskHeight - 12);
   }
   deskHeight = desk.clientHeight;
 }).observe(desk);
@@ -1329,7 +1332,7 @@ function drag(w, handle) {
     handle.addEventListener("lostpointercapture", () => outline.remove(), { once: true });
   });
   handle.addEventListener("pointermove", e => { if (handle.hasPointerCapture(e.pointerId)) move(to(e)); });
-  handle.addEventListener("pointerup", e => { if (handle.hasPointerCapture(e.pointerId)) place(w, ...to(e), true); });
+  handle.addEventListener("pointerup", e => { if (handle.hasPointerCapture(e.pointerId)) { w.at = to(e); place(w, true); } });
 }
 
 // Space plays or pauses the video in the front window, unless a button or link has focus.

@@ -725,8 +725,8 @@ function close(id, popped) {
   else { name(null); cascade = 0; }
   // Closing the window the current entry opened steps back, so Back and Forward stay in step.
   if (!popped && w.entry === here && here > 0) { here--; stepping++; history.back(); }
+  (opener || (next ? next.body : icon))?.focus();   // this can bring a window to the front, so it goes first
   w.style.zIndex = shield.style.zIndex = ++z;   // stay on top while it flickers out
-  (opener || (next ? next.body : icon))?.focus();
 }
 // Keep a window's close box and at least 120px of its title bar on the desk, below the menu bar.
 // Its height is capped from its top, so its bottom stays on the desk and content that loads

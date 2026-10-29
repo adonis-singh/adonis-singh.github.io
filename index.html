@@ -16,16 +16,19 @@ try { const t = localStorage.getItem("theme"); if (t) document.documentElement.d
 :root {
   --ink: #000;
   --win: #fff;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ink: #fff;
     --win: #000;
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --ink: #fff;
   --win: #000;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -157,7 +160,7 @@ a { color: inherit; }
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
-.icon[aria-pressed="true"] .label { background: var(--ink); color: var(--win); }
+.icon.selected .label { background: var(--ink); color: var(--win); }
 
 
 /* Windows */
@@ -355,7 +358,7 @@ a { color: inherit; }
 </head>
 <body>
 
-<ul class="menubar" id="menubar"></ul>
+<nav aria-label="Menu bar"><ul class="menubar" id="menubar"></ul></nav>
 <main class="desk" id="desk">
   <ul class="icons" id="icons"></ul>
 </main>
@@ -464,7 +467,6 @@ function iconCanvas(item) {
 /* Icons */
 for (const item of items) {
   const b = el("button", { className: "icon", type: "button", title: item.name }, [iconCanvas(item), el("span", { className: "label", textContent: item.label || item.name })]);
-  b.setAttribute("aria-pressed", "false");
   b.dataset.id = item.id;
   b.addEventListener("pointerdown", e => e.stopPropagation());
   b.addEventListener("click", e => {
@@ -478,7 +480,7 @@ for (const item of items) {
   iconList.append(el("li", {}, b));
 }
 function select(id) {
-  for (const [k, b] of icons) b.setAttribute("aria-pressed", String(k === id));
+  for (const [k, b] of icons) b.classList.toggle("selected", k === id);   // a mouse-only state, so not in ARIA
 }
 desk.addEventListener("pointerdown", e => { if (e.target === desk || e.target === iconList) select(null); });
 
@@ -643,7 +645,7 @@ function open(id, opener, entry) {
     '<svg class="x" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z" fill="currentColor"/></svg>' +
     '<svg class="burst" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM1 5h1v1H1zM0 6h1v1H0zM3 0h1v2H3zM3 5h1v2H3zM0 3h2v1H0zM5 3h2v1H5z" fill="currentColor"/></svg>' });
   closeBtn.setAttribute("aria-label", "Close");
-  const title = el("div", { className: "titlebar" }, [closeBtn, el("h2", { textContent: item.name })]);
+  const title = el("div", { className: "titlebar" }, [closeBtn, el("h2", { id: id + "-title", textContent: item.name })]);
   const body = content(item);
   const w = el("section", { className: item.wide ? "window wide" : "window", tabIndex: -1 }, [title, body]);
   w.dataset.id = id;
@@ -651,7 +653,8 @@ function open(id, opener, entry) {
   w.body = body;
   w.opener = opener;
   w.origin = icon ? icon.querySelector("canvas") : windows.get(item.parent).querySelector(".composite");   // zoom from here
-  w.setAttribute("aria-label", item.name);
+  w.setAttribute("role", "dialog");   // non-modal
+  w.setAttribute("aria-labelledby", id + "-title");
   w.style.visibility = "hidden";
   desk.append(w);
   windows.set(id, w);
@@ -780,6 +783,7 @@ const STEPS = 48;             // dissolve steps
 const STEP_MS = 100;          // ms per dissolve step
 const DEPTH = 0.5;    // darkest tone, as a share of pixels inked; keeps the picture behind the windows
 const picture = el("canvas", { className: "picture" });
+picture.setAttribute("aria-hidden", "true");   // the ? names it
 desk.prepend(picture);
 const pctx = picture.getContext("2d");
 const sources = new Map();

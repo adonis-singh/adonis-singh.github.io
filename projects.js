@@ -21,7 +21,7 @@
 window.SITE = {
   name: "Adi Singh",
   intro: [
-    "I'm Adi. I'm a student, and I work on whatever I find interesting. Some of it is here.",
+    "I'm Adi Singh, a student. I build benchmarks for AI models, and I decompile and port games.",
     "I used to work at LM Studio.",
   ],
   // Desktop pictures. One is picked at random, and every few minutes another dissolves in.
@@ -95,7 +95,7 @@ window.PROJECTS = [
     id: "mcbench",
     name: "MC-Bench",
     year: 2025,
-    blurb: "AI models build in Minecraft, people vote on the builds.",
+    blurb: "AI models built in Minecraft, and people voted on the builds.",
     body: [
       "A website where people judged Minecraft builds made by AI models. Two models got the same prompt and wrote code to build it. You voted for the better build, then saw which model made which. The votes made a leaderboard.",
       "It started from a conversation with [Aidan McLau](https://x.com/aidan_mclau), who helped bring the team together. A group of volunteers built it. It's offline now, but the code is still up.",
@@ -107,7 +107,7 @@ window.PROJECTS = [
       ["Site", "mcbench.ai, offline"],
     ],
     tweets: [
-      { date: "Oct 25, 2024", text: "Announcing MC-Bench", href: "https://x.com/adonis_singh/status/1849697262953259452" },
+      { date: "Oct 25, 2024", text: "The announcement", href: "https://x.com/adonis_singh/status/1849697262953259452" },
       { date: "Mar 1, 2025", text: "Public voting in 10 days, and the team", href: "https://x.com/adonis_singh/status/1895908048407056889" },
       { date: "Mar 15, 2025", text: "Voting goes live", href: "https://x.com/adonis_singh/status/1900998737675116842" },
     ],
@@ -132,7 +132,7 @@ window.PROJECTS = [
     ],
     tweets: [
       { date: "Feb 27, 2026", text: "EyeBench V2 and its first leaderboard", href: "https://x.com/adonis_singh/status/2027465990024438169" },
-      { date: "Mar 10, 2026", text: "Introducing EyeBench V3", href: "https://x.com/adonis_singh/status/2031516743110214015" },
+      { date: "Mar 10, 2026", text: "EyeBench V3", href: "https://x.com/adonis_singh/status/2031516743110214015" },
       { date: "Oct 8, 2026", text: "What EyeBench is", href: "https://x.com/adonis_singh/status/2108283869401084201" },
     ],
     images: [
@@ -151,12 +151,12 @@ window.PROJECTS = [
     year: 2026,
     blurb: "Spider-Man 2's web swinging in GTA V.",
     body: [
-      "Spider-Man 2's web swinging in GTA V, as Trevor. I'm porting the movement and combat code from Marvel's Spider-Man 2 on PC into a GTA V script, and checking it frame by frame against the real game. The plan is to turn it into its own game that runs off your copies of both.",
+      "I'm porting the movement and combat code from Marvel's Spider-Man 2 on PC into a GTA V script that plays as Trevor, and checking it frame by frame against the real game. The plan is to make it a standalone game that runs off your own copies of both.",
     ],
     icon: "media/icons/trevorswing.png",
     info: [
       ["Language", "C++"],
-      ["Made with", "Claude Opus 5.5, some GPT-6.1 Sol"],
+      ["Made with", "Claude Opus 5.5 and some GPT-6.1 Sol"],
       ["Started", "September 30, 2026"],
       ["Status", "In progress"],
       ["Code", "Private"],

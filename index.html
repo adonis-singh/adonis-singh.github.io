@@ -1233,10 +1233,15 @@ function open(id, opener, entry) {
   windows.set(id, w);
   icon?.classList.add("open");   // the Finder fills an open item's icon with grey
 
-  // Cascade new windows from the top-left, keeping them on screen.
-  w.at = [Math.min(24 + cascade * 24, desk.clientWidth - w.offsetWidth - 12), Math.min(16 + cascade * 24, desk.clientHeight - w.offsetHeight - 12)];
+  // Cascade new windows from the top-left, keeping them on screen. A spot within a step of an open
+  // window is passed over. There are eight windows and eight spots, so on a big desk one is free.
+  const spot = n => [Math.min(24 + n % 8 * 24, desk.clientWidth - w.offsetWidth - 12), Math.min(16 + n % 8 * 24, desk.clientHeight - w.offsetHeight - 12)];
+  const near = ([x, y]) => [...windows.values()].some(o => o !== w && Math.abs(o.offsetLeft - x) < 24 && Math.abs(o.offsetTop - y) < 24);
+  let n = cascade;
+  while (n < cascade + 7 && near(clamp(w, ...spot(n)))) n++;
+  w.at = spot(n);
   place(w);
-  cascade = (cascade + 1) % 8;
+  cascade = (n + 1) % 8;
   front(w);
 
   w.querySelectorAll(SNAP).forEach(snap);

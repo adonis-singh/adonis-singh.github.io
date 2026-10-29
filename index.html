@@ -464,9 +464,10 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 /* A phone on its side: the movie and the run map no taller than the window's room, so each fits on
    screen with its controls. --room is the screen less the bar, title bar, padding and controls. */
 @media (max-height: 500px) {
-  .player, .run { --room: calc(100dvh - var(--bar) - 96px); margin-inline: auto; }
-  .player { max-width: calc(var(--room) * 16 / 9 + 2px); }
-  .run { max-width: calc(var(--room) * var(--aspect) + 2px); }
+  /* Centred on whole pixels, so the counter's text stays sharp. */
+  .player, .run { --room: calc(100dvh - var(--bar) - 96px); width: var(--w); margin-left: round(down, calc((100% - var(--w)) / 2), 1px); }
+  .player { --w: min(100%, round(down, calc(var(--room) * 16 / 9 + 2px), 1px)); }
+  .run { --w: min(100%, round(down, calc(var(--room) * var(--aspect) + 2px), 1px)); }
 }
 @media (max-width: 480px) {
   .frame .word { display: none; }   /* "213 of 375", so the seek bar keeps its room */

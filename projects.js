@@ -12,7 +12,8 @@
 //   tweets  [{ date, text, href }] links to tweets about the project
 //   thumb   poster frame for the video
 //   video   optional looping muted clip
-//   images  optional extra images
+//   images  optional extra images [{ src, thumb, alt }]; thumb is a 240px square crop for the window's composite,
+//           and the images window shows src
 //   scores  { page, source, top }: the top models from an EyeBench leaderboard's data file, each at its
 //           highest tested effort, with a link to the full leaderboard page
 //   links   buttons in the full view
@@ -135,11 +136,11 @@ window.PROJECTS = [
       { date: "Oct 8, 2026", text: "What EyeBench is", href: "https://x.com/adonis_singh/status/2108283869401084201" },
     ],
     images: [
-      { src: "media/eyebench-spot-diff-10.jpg", alt: "Spot the differences" },
-      { src: "media/eyebench-topology-21.jpg", alt: "Count the loops" },
-      { src: "media/eyebench-graph-41.jpg", alt: "Count the pieces of a graph" },
-      { src: "media/eyebench-pattern-61.jpg", alt: "Complete the pattern" },
-      { src: "media/eyebench-maze-100.jpg", alt: "Count the turns in a maze" },
+      { src: "media/eyebench-spot-diff-10.jpg", thumb: "media/eyebench-spot-diff-10-thumb.jpg", alt: "Spot the differences" },
+      { src: "media/eyebench-topology-21.jpg", thumb: "media/eyebench-topology-21-thumb.jpg", alt: "Count the loops" },
+      { src: "media/eyebench-graph-41.jpg", thumb: "media/eyebench-graph-41-thumb.jpg", alt: "Count the pieces of a graph" },
+      { src: "media/eyebench-pattern-61.jpg", thumb: "media/eyebench-pattern-61-thumb.jpg", alt: "Complete the pattern" },
+      { src: "media/eyebench-maze-100.jpg", thumb: "media/eyebench-maze-100-thumb.jpg", alt: "Count the turns in a maze" },
     ],
     scores: { page: "https://adonis-singh.github.io/eyebench/", source: "https://adonis-singh.github.io/eyebench/data-frontier.js", top: 10 },
     links: [],

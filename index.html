@@ -376,7 +376,7 @@ a { color: inherit; }
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=7a95742e6a"></script>
+<script src="projects.js?v=0508e7227e"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -616,7 +616,7 @@ function content(item) {
   }
   if (item.video) c.append(player(item.video, item.thumb, item.name));
   if (item.images) {
-    const b = el("button", { className: "composite", type: "button" }, item.images.map(i => el("img", { src: i.src, alt: i.alt })));
+    const b = el("button", { className: "composite", type: "button" }, item.images.map(i => el("img", { src: i.thumb, alt: i.alt })));
     b.setAttribute("aria-label", "Open " + item.name + " images");
     b.addEventListener("click", () => open(item.id + "-images", b));
     c.append(b);

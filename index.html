@@ -367,6 +367,27 @@ a { color: inherit; }
   .controls { height: 34px; }
   .play { width: 44px; height: 33px; }
 }
+
+/* Print: only the plain sheet that printSheet() builds, black on white. */
+.print { display: none; }
+@media print {
+  @page { margin: 14mm 16mm; }
+  html, body { height: auto; overflow: visible; background: #fff; color: #000; }
+  body > * { display: none !important; }
+  body > .print { display: block !important; }
+  .print { font-family: Georgia, "Times New Roman", serif; font-size: 9.5pt; line-height: 1.35; }
+  .print h1 { margin: 0 0 6pt; font-size: 20pt; font-weight: normal; line-height: 1.2; }
+  .print h2 { display: flex; justify-content: space-between; margin: 0; font-size: 13pt; line-height: 1.3; }
+  .print section { margin-top: 12pt; padding-top: 6pt; border-top: 1pt solid #000; break-inside: avoid; }
+  .print p { margin: 0 0 5pt; }
+  .print .blurb { font-style: italic; }
+  .print dl { display: grid; grid-template-columns: 9em 1fr; gap: 0 10pt; margin: 5pt 0 0; }
+  .print dt { font-weight: bold; }
+  .print dd { margin: 0; }
+  .print ul { margin: 5pt 0 0; padding: 0; list-style: none; }
+  .print li { display: grid; grid-template-columns: 6.5em 1fr auto; gap: 0 10pt; }
+  .print a { color: #000; text-decoration: none; overflow-wrap: anywhere; }
+}
 </style>
 </head>
 <body>
@@ -921,6 +942,35 @@ function themeChanged() {
   pctx.putImageData(frame, 0, 0);
 }
 systemDark.addEventListener("change", themeChanged);
+
+/* Printing, or saving as PDF, gives plain pages instead of the desk: the name, the intro and
+   contacts, then every project, with each link written out as its URL. */
+function printSheet() {
+  const url = href => ext({ href, textContent: href.replace(/^mailto:/, "") });
+  const rows = (pairs) => el("dl", {}, pairs.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", {}, v)]));
+  const sheet = el("article", { className: "print" }, [
+    el("h1", { textContent: SITE.name }),
+    ...SITE.intro.map(t => el("p", { textContent: t })),
+    rows([
+      ["Website", url(document.querySelector('link[rel="canonical"]').href)],
+      ...SITE.contact.filter(l => l.href.startsWith("mailto:")).map(l => [l.label, url(l.href)]),
+      ...SITE.links.map(l => [l.label, url(l.href)]),
+    ]),
+  ]);
+  for (const p of PROJECTS) {
+    const links = [...p.links.map(l => [l.label, url(l.href)]), ...(p.scores ? [["Leaderboard", url(p.scores.page)]] : [])];
+    sheet.append(el("section", {}, [
+      el("h2", {}, [el("span", { textContent: p.name }), el("span", { textContent: p.year })]),
+      el("p", { className: "blurb", textContent: p.blurb }),
+      // [text](url) in a paragraph prints as text (url).
+      ...p.body.map(t => el("p", { textContent: t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)") })),
+      rows([...p.info.map(([k, v]) => [k, v]), ...links]),
+      el("ul", {}, p.tweets.map(t => el("li", {}, [el("span", { textContent: t.date }), el("span", { textContent: t.text }), url(t.href)]))),
+    ]));
+  }
+  return sheet;
+}
+document.body.append(printSheet());
 </script>
 </body>
 </html>

@@ -89,7 +89,7 @@ try { const t = localStorage.getItem("theme"); if (t) document.documentElement.d
 }
 
 * { box-sizing: border-box; }
-html { --bar: 28px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; cursor: default; }
+html { --bar: 24px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; cursor: default; }
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -234,7 +234,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   user-select: none;
 }
 .window.front .titlebar { background: repeating-linear-gradient(to bottom, var(--ink) 0 1px, var(--win) 1px 2px) content-box; }
-.titlebar h2 { margin: 0; padding: 0 8px; background: var(--win); font: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titlebar h2 { margin: -2px 0; padding: 0 8px; background: var(--win); font: inherit; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* taller than the stripes, for descenders */
 .close {
   position: absolute;
   left: 8px;
@@ -404,14 +404,15 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 }
 @media (max-width: 360px) {
   .menubar a { padding: 0 6px; }
-  .menubar button { width: 28px; }
+  .menubar button { width: 32px; }
 }
 /* Fingers need bigger targets than a mouse. */
 @media (pointer: coarse) {
   html { --bar: 34px; }
   .close::after { inset: -11px -12px; }
-  .tweets li { padding: 4px 0; }
   .tweets li + li { margin-top: 0; }
+  .tweets li > * { padding: 6px 0; }
+  .tweets a { display: block; }
   .menubar a { min-width: 36px; text-align: center; }
   .btn { line-height: 28px; }
   .controls { height: 35px; }

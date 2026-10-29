@@ -420,7 +420,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 .nowrap { white-space: nowrap; }
 @media (pointer: coarse) {
   .content .tall { position: relative; }
-  .content .tall::after { content: ""; position: absolute; inset: -4px 0; }   /* a 32px tall target for a finger */
+  .content .tall::after { content: ""; position: absolute; inset: -5px 0; }   /* a 32px tall target for a finger, the 22px link and 5px each way */
 }
 
 /* Zoom rectangles, and the outline a dragged window leaves behind until it is let go */

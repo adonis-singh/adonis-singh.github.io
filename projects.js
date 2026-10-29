@@ -107,10 +107,11 @@ window.SITE = {
     { label: "Email", glyph: "mail", href: "mailto:getaditya2008@gmail.com" },
     { label: "DM me", menu: "DM me on X", glyph: "x", href: "https://x.com/messages/compose?recipient_id=1591379820658696192" },
   ],
-  // Items at the end of the Adi Singh menu. bar: true puts the link on the menu bar too, at the right.
+  // Items at the end of the Adi Singh menu. bar: true puts the link on the menu bar too, at the right,
+  // named label. menu is the item's name in the menu, when it differs from label.
   links: [
     { label: "GitHub", href: "https://github.com/adonis-singh", bar: true },
-    { label: "X", href: "https://x.com/adonis_singh", bar: true },
+    { label: "X", menu: "@adonis_singh on X", href: "https://x.com/adonis_singh", bar: true },
     { label: "Buy me a coffee", href: "https://buymeacoffee.com/adonis_singh" },
   ],
 };

@@ -540,7 +540,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=39ff290251"></script>
+<script src="projects.js?v=33b80521ff"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -596,7 +596,7 @@ const MENUS = [
     sep,
     ...SITE.contact.map(l => ({ label: l.menu || l.label, href: l.href })),
     sep,
-    ...SITE.links.map(l => ({ label: l.label, href: l.href })),
+    ...SITE.links.map(l => ({ label: l.menu || l.label, href: l.href })),
   ] },
   { title: "Projects", items: [
     ...PROJECTS.map(p => ({ label: p.name, act: () => open(p.id) })),

@@ -16,6 +16,11 @@
 //           and the images window shows src
 //   scores  { page, source, top }: the top models from an EyeBench leaderboard's data file, each at its
 //           highest tested effort, with a link to the full leaderboard page
+//   check   { file, command, page }: a project's own build check. file is a copy of the checksum list the
+//           build checks against ("<sha1>  <path>" per line), command is the command that checks it, and
+//           page is the list in the repo. The window shows the command and what it prints after a
+//           matching build, "<path>: OK" for each file as dtk shasum -c prints it, then the count
+//           ("115 files OK", as dtk shasum -q prints it). The lines are shown, not checked, in the browser.
 //   links   buttons in the full view
 
 window.SITE = {
@@ -192,6 +197,12 @@ window.PROJECTS = [
       { date: "Sep 15, 2026", text: "Matching the original compilers", href: "https://x.com/adonis_singh/status/2099836988605989044" },
       { date: "Sep 15, 2026", text: "Things found in the code", href: "https://x.com/adonis_singh/status/2099836985581985903" },
     ],
+    // media/re4-build.sha1 is a copy of config/G4BE08/build.sha1 from the repo.
+    check: {
+      file: "media/re4-build.sha1",
+      command: "build/tools/dtk shasum -c config/G4BE08/build.sha1",
+      page: "https://github.com/adonis-singh/re4/blob/master/config/G4BE08/build.sha1",
+    },
     links: [{ label: "Code", href: "https://github.com/adonis-singh/re4" }],
   },
   {

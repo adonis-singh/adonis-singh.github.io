@@ -328,6 +328,19 @@ a { color: inherit; }
 .scrub span { display: block; width: 0; height: 100%; background: var(--ink); }
 .player video { cursor: default; }
 
+/* A build's checksum check, as the command prints it */
+.check { margin: 0 0 14px; border: 1px solid var(--ink); line-height: 20px; }
+.check .cmd { padding: 2px 8px; border-bottom: 1px solid var(--ink); }
+.check pre { position: relative; height: 140px; margin: 0; padding: 0 8px; overflow: auto; font: inherit; line-height: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.check pre span { display: block; }
+.check .total { padding: 2px 8px; border-top: 1px solid var(--ink); }
+.check .unprinted { color: transparent; }
+.nowrap { white-space: nowrap; }
+@media (pointer: coarse) {
+  .content .tall { position: relative; }
+  .content .tall::after { content: ""; position: absolute; inset: -4px 0; }   /* a 32px tall target for a finger */
+}
+
 /* Zoom rectangles */
 .zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
 .shield { position: absolute; }
@@ -376,7 +389,7 @@ a { color: inherit; }
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=0508e7227e"></script>
+<script src="projects.js?v=7d2d81c364"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -596,6 +609,49 @@ function scores(s) {
   });
   return [ol, note];
 }
+// A build's checksum check. The list has "<sha1>  <path>" per line, and after a matching build
+// the command prints "<path>: OK" for each. Every line is in the page from the start, so screen
+// readers have them all; on screen they print a few at a time, unevenly, like an old machine
+// drawing text, and any key, tap, click or scroll prints the rest at once.
+function check(s) {
+  const pre = el("pre", { tabIndex: 0 });
+  const total = el("div", { className: "total" });
+  fetch(s.file).then(r => r.text()).then(text => {
+    const lines = text.trim().split("\n").map(l => el("span", { className: "unprinted", textContent: l.split("  ")[1] + ": OK" }));
+    pre.append(...lines);
+    total.append(el("span", { className: "unprinted", textContent: lines.length + " files OK" }));
+    new IntersectionObserver(([e], o) => {
+      if (!e.isIntersecting) return;
+      o.disconnect();
+      typeOut(pre, lines, total.firstChild);
+    }).observe(pre);
+  });
+  return [
+    el("p", {}, ["Each file the build makes is checked against the original's ", el("span", { className: "nowrap", textContent: "SHA-1," }), " listed in ", ext({ href: s.page, textContent: "build.sha1", className: "tall" }), ":"]),
+    el("figure", { className: "check" }, [el("figcaption", { className: "cmd", textContent: s.command }), pre, total]),
+  ];
+}
+function typeOut(pre, lines, total) {
+  let n = 0, timer;
+  const finish = () => {
+    clearTimeout(timer);
+    for (; n < lines.length; n++) lines[n].classList.remove("unprinted");
+    total.classList.remove("unprinted");
+    for (const [t, e] of stops) t.removeEventListener(e, finish);
+  };
+  const stops = [[pre, "pointerdown"], [pre, "wheel"], [pre, "touchstart"], [document, "keydown"]];
+  if (still) return finish();
+  for (const [t, e] of stops) t.addEventListener(e, finish, { passive: true });
+  const step = () => {
+    const to = Math.min(lines.length, n + 2 + Math.floor(Math.random() * 5));
+    for (; n < to; n++) lines[n].classList.remove("unprinted");
+    const last = lines[n - 1];
+    pre.scrollTop = last.offsetTop + last.offsetHeight - pre.clientHeight;
+    if (n < lines.length) timer = setTimeout(step, 15 + Math.random() * 30 + (Math.random() < 0.05 ? 200 : 0));   // now and then the machine stalls
+    else finish();
+  };
+  timer = setTimeout(step, 400);   // once the window has zoomed open
+}
 function content(item) {
   const c = el("div", { className: "content", tabIndex: 0 });   // focusable, so keys scroll it
   for (const p of item.body || []) {
@@ -622,6 +678,7 @@ function content(item) {
     c.append(b);
   }
   if (item.pictures) c.append(el("div", { className: "pictures" }, item.pictures.map(i => el("figure", {}, [el("img", { src: i.src, alt: i.alt }), el("figcaption", { textContent: i.alt })]))));
+  if (item.check) c.append(...check(item.check));
   if (item.scores) c.append(...scores(item.scores));
   if (item.info) c.append(el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })])));
   if (item.tweets && item.tweets.length) c.append(el("ul", { className: "tweets" }, item.tweets.map(t => el("li", {}, [el("span", { className: "date", textContent: t.date }), ext({ href: t.href, textContent: t.text })]))));

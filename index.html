@@ -428,27 +428,29 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 .dragrect { position: fixed; z-index: 9999; border: 1px solid #fff; mix-blend-mode: difference; pointer-events: none; }   /* inverts what it crosses, so it reads on any picture */
 .shield { position: absolute; }
 
-/* Mac scroll bars inside windows: arrow boxes, a track in the 50% pattern, and a square box that
-   rides along it. The front window's alone are drawn; the others are blank. */
-@media (min-width: 601px) and (min-height: 501px) {
-  .content::-webkit-scrollbar { width: 16px; }
-  .content::-webkit-scrollbar-track { border-left: 1px solid var(--ink); background: var(--grey); }
-  .content::-webkit-scrollbar-thumb {
+/* Mac scroll bars inside windows, and in the boxes in them that scroll: arrow boxes, a track in the
+   50% pattern, and a square box that rides along it. The front window's alone are drawn; the others
+   are blank. On big screens, and on any screen with a mouse; a touch screen's own scroll bars only
+   show while it scrolls, and take no room. */
+@media (min-width: 601px) and (min-height: 501px), (pointer: fine) {
+  :is(.content, .check pre)::-webkit-scrollbar { width: 16px; }
+  :is(.content, .check pre)::-webkit-scrollbar-track { border-left: 1px solid var(--ink); background: var(--grey); }
+  :is(.content, .check pre)::-webkit-scrollbar-thumb {
     background:
-      linear-gradient(to right, var(--ink) 0 1px, transparent 1px) 0 var(--f, 0%) / 16px 16px no-repeat,
-      linear-gradient(var(--ink) 0 1px, var(--win) 1px 15px, var(--ink) 15px) 0 var(--f, 0%) / 16px 16px no-repeat;
+      linear-gradient(to right, var(--ink) 0 1px, transparent 1px) 0 var(--f) / 16px 16px no-repeat,
+      linear-gradient(var(--ink) 0 1px, var(--win) 1px 15px, var(--ink) 15px) 0 var(--f) / 16px 16px no-repeat;
   }
-  .content::-webkit-scrollbar-button { display: none; }
-  .content::-webkit-scrollbar-button:vertical:start:decrement, .content::-webkit-scrollbar-button:vertical:end:increment { display: block; height: 16px; }
-  .content::-webkit-scrollbar-button:vertical:start:decrement { background: var(--sb-up); }
-  .content::-webkit-scrollbar-button:vertical:end:increment { background: var(--sb-down); }
-  .content::-webkit-scrollbar-button:vertical:start:decrement:active { background: var(--sb-up-on); }
-  .content::-webkit-scrollbar-button:vertical:end:increment:active { background: var(--sb-down-on); }
-  .window:not(.front) .content::-webkit-scrollbar-track, .window:not(.front) .content::-webkit-scrollbar-button:vertical:start:decrement, .window:not(.front) .content::-webkit-scrollbar-button:vertical:end:increment { background: linear-gradient(var(--ink) 0 0) 0 0 / 1px 100% no-repeat, var(--win); border: 0; }
-  .window:not(.front) .content::-webkit-scrollbar-thumb { background: none; }
+  :is(.content, .check pre)::-webkit-scrollbar-button { display: none; }
+  :is(.content, .check pre)::-webkit-scrollbar-button:vertical:start:decrement, :is(.content, .check pre)::-webkit-scrollbar-button:vertical:end:increment { display: block; height: 16px; }
+  :is(.content, .check pre)::-webkit-scrollbar-button:vertical:start:decrement { background: var(--sb-up); }
+  :is(.content, .check pre)::-webkit-scrollbar-button:vertical:end:increment { background: var(--sb-down); }
+  :is(.content, .check pre)::-webkit-scrollbar-button:vertical:start:decrement:active { background: var(--sb-up-on); }
+  :is(.content, .check pre)::-webkit-scrollbar-button:vertical:end:increment:active { background: var(--sb-down-on); }
+  .window:not(.front) :is(.content, .check pre)::-webkit-scrollbar-track, .window:not(.front) :is(.content, .check pre)::-webkit-scrollbar-button:vertical:start:decrement, .window:not(.front) :is(.content, .check pre)::-webkit-scrollbar-button:vertical:end:increment { background: linear-gradient(var(--ink) 0 0) 0 0 / 1px 100% no-repeat, var(--win); border: 0; }
+  .window:not(.front) :is(.content, .check pre)::-webkit-scrollbar-thumb { background: none; }
 }
 @supports not selector(::-webkit-scrollbar) {
-  .content { scrollbar-color: var(--ink) var(--win); }
+  .content, .check pre { scrollbar-color: var(--ink) var(--win); }
 }
 
 @media (max-width: 600px), (max-height: 500px) {
@@ -1108,7 +1110,7 @@ function scores(s) {
 // readers have them all; on screen they print a few at a time, unevenly, like an old machine
 // drawing text, and any key, tap, click or scroll prints the rest at once.
 function check(s) {
-  const pre = el("pre", { tabIndex: 0 });
+  const pre = scrolls(el("pre", { tabIndex: 0 }));
   const total = el("div", { className: "total" });
   fetch(s.file).then(r => r.text()).then(text => {
     const lines = text.trim().split("\n").map(l => el("span", { className: "unprinted", textContent: l.split("  ")[1] + ": OK" }));
@@ -1124,6 +1126,13 @@ function check(s) {
     el("p", {}, ["Each file the build makes is checked against the original's ", el("span", { className: "nowrap", textContent: "SHA-1," }), " listed in ", ext({ href: s.page, textContent: "build.sha1", className: "tall" }), ":"]),
     el("figure", { className: "check" }, [el("figcaption", { className: "cmd", textContent: s.command }), pre, total]),
   ];
+}
+// A scroll bar's square box sits as far down its thumb as the box is scrolled, so it runs the whole
+// track like the Mac's, however long the thumb is. It starts at the top, not where an outer box is.
+function scrolls(n) {
+  n.style.setProperty("--f", "0%");
+  n.addEventListener("scroll", () => n.style.setProperty("--f", n.scrollTop / (n.scrollHeight - n.clientHeight) * 100 + "%"), { passive: true });
+  return n;
 }
 function typeOut(pre, lines, total) {
   let n = 0, timer;
@@ -1147,10 +1156,7 @@ function typeOut(pre, lines, total) {
   timer = setTimeout(step, 400);   // once the window has zoomed open
 }
 function content(item) {
-  const c = el("div", { className: "content", tabIndex: 0 });   // focusable, so keys scroll it
-  // The scroll bar's square box sits as far down its thumb as the window is scrolled, so it runs
-  // the whole track like the Mac's, however long the thumb is.
-  c.addEventListener("scroll", () => c.style.setProperty("--f", c.scrollTop / (c.scrollHeight - c.clientHeight) * 100 + "%"), { passive: true });
+  const c = scrolls(el("div", { className: "content", tabIndex: 0 }));   // focusable, so keys scroll it
   for (const p of item.body || []) {
     // [text](url) in a paragraph becomes a link.
     const parts = p.split(/\[([^\]]+)\]\(([^)]+)\)/);

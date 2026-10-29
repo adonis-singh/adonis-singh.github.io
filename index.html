@@ -96,7 +96,6 @@ a { color: inherit; }
   image-rendering: pixelated;
   pointer-events: none;
 }
-.icons { position: relative; }
 .about {
   position: absolute;
   right: 12px;
@@ -114,6 +113,7 @@ a { color: inherit; }
 }
 .about:focus-visible, .about:active { background: var(--ink); color: var(--win); outline: none; }
 .icons {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex-wrap: wrap-reverse;
@@ -265,7 +265,8 @@ a { color: inherit; }
 }
 .btn:active { background: var(--ink); color: var(--win); }
 .btn svg { width: 14px; height: 14px; margin-right: 7px; vertical-align: -2px; fill: currentColor; }
-.btn:active svg path[stroke] { stroke: var(--ink); }
+.btn .flap { stroke: var(--win); }
+.btn:active .flap { stroke: var(--ink); }
 
 /* Scores */
 .scores { margin: 4px 0 0; padding: 0; list-style: none; }
@@ -337,7 +338,6 @@ a { color: inherit; }
   .content { flex: 1; padding: 12px max(14px, calc((100% - 640px) / 2)) 20px; }
   .scores li { grid-template-columns: 1fr 40px; gap: 0 12px; margin-bottom: 6px; }
   .scores .bar { grid-column: 1 / -1; grid-row: 2; }
-  .strip img { width: 78%; }
 }
 @media (max-width: 360px) {
   .menubar { font-size: 15px; }
@@ -394,7 +394,7 @@ me.addEventListener("click", e => { e.preventDefault(); open("readme", me); });
 menubar.append(el("li", {}, me));
 const ext = (props) => el("a", { target: "_blank", rel: "noopener", ...props });
 const glyphs = {
-  mail: '<svg viewBox="0 0 14 14"><rect y="2" width="14" height="10"/><path d="M1 3.5l6 4.5 6-4.5" fill="none" stroke="var(--win)" stroke-width="1.4"/></svg>',
+  mail: '<svg viewBox="0 0 14 14"><rect y="2" width="14" height="10"/><path class="flap" d="M1 3.5l6 4.5 6-4.5" fill="none" stroke-width="1.4"/></svg>',
   x: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
 };
 for (const l of SITE.links) menubar.append(el("li", {}, ext({ href: l.href, textContent: l.label })));

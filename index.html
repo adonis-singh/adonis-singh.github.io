@@ -890,10 +890,13 @@ function player(src, poster, name, frames) {
       video.currentTime = Math.min(video.duration, Math.max(0, to));
     });
   }, { once: true });
-  // Play only while on screen, and never if the visitor paused it or prefers no motion.
+  // Play only while on screen, and never if the visitor paused it or prefers no motion. It loads
+  // only once it plays, and the first desk picture loads first, so on a slow network a window
+  // opened from a link doesn't leave the desk blank.
   new IntersectionObserver(([e]) => {
-    if (e.isIntersecting && !wrap.userPaused && !still) video.play();
-    else video.pause();
+    wrap.onScreen = e.isIntersecting;
+    if (!e.isIntersecting) return video.pause();
+    firstPicture.then(() => { if (wrap.onScreen && !wrap.userPaused && !still) video.play(); });
   }).observe(video);
   return wrap;
 }
@@ -1328,6 +1331,7 @@ const load = p => sources.get(p) || sources.set(p, new Promise(r => { const i = 
 let W, H, K, frame, px32, order, starts, gen = 0, timer;
 const pick = (not) => { const n = Math.floor(Math.random() * (SITE.pictures.length - 1)); return n >= not ? n + 1 : n; };
 let shown = Math.floor(Math.random() * SITE.pictures.length);   // the picture on the desk, or dissolving in
+const firstPicture = load(SITE.pictures[shown]);   // before any window asks for its pictures and videos
 let onDesk = -1;    // the picture a dissolve starts from; -1 while the desk is the 50% pattern
 
 

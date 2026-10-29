@@ -450,6 +450,12 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 @supports not selector(::-webkit-scrollbar) {
   .content, .check pre { scrollbar-color: var(--ink) var(--win); }
 }
+/* Elsewhere, a touch screen's own scroll bar shows while a box scrolls, in grey. The windows' sits at
+   the screen's edge; the checksum box's would sit in the window, so it has none, and its cut-off last
+   line says it scrolls. */
+@media not (((min-width: 601px) and (min-height: 501px)) or (pointer: fine)) {
+  .check pre { scrollbar-width: none; }
+}
 
 @media (max-width: 600px), (max-height: 500px) {
   .menubar { padding: 0; }

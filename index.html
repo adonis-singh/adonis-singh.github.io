@@ -129,7 +129,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 .title, .menubar .link {
   display: block;
   height: calc(var(--bar) - 1px);
-  padding: 0 8px;
+  padding: 0 8px 1px;   /* the text on the top 22px, in a button as in a link */
   border: 0;
   background: none;
   line-height: calc(var(--bar) - 2px);
@@ -432,7 +432,6 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 
 @media (max-width: 600px), (max-height: 500px) {
   .menubar { padding: 0; }
-  .title, .menubar .link { padding: 0 8px; }
   /* Menus drop full width under the bar. */
   .menu { position: fixed; top: calc(var(--bar) - 1px); right: 0; max-height: calc(100% - var(--bar) + 1px); overflow-y: auto; border-width: 1px 0; box-shadow: 0 1px 0 var(--ink); }
   .icons {
@@ -457,7 +456,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   .frame .word { display: none; }   /* "213 of 375", so the seek bar keeps its room */
 }
 @media (max-width: 360px) {
-  .title, .menubar .link { padding: 0 6px; }
+  .title, .menubar .link { padding-inline: 6px; }
   .theme { width: 32px; }
 }
 /* Fingers need bigger targets than a mouse. */

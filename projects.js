@@ -88,7 +88,7 @@ window.SITE = {
   // before the label: "mail" or "x". menu is the item's name in the menu, when it differs from label.
   contact: [
     { label: "Email", glyph: "mail", href: "mailto:getaditya2008@gmail.com" },
-    { label: "DM me", menu: "Message on X", glyph: "x", href: "https://x.com/messages/compose?recipient_id=1591379820658696192" },
+    { label: "DM me", menu: "DM me on X", glyph: "x", href: "https://x.com/messages/compose?recipient_id=1591379820658696192" },
   ],
   // Items at the end of the Adi Singh menu. bar: true puts the link on the menu bar too, at the right.
   links: [

@@ -29,7 +29,6 @@ addEventListener("resize", dot);
   color-scheme: light;
   --dot: 1px;
   --grey: repeating-conic-gradient(var(--ink) 0 25%, var(--win) 0 50%) 0 0 / calc(2 * var(--dot)) calc(2 * var(--dot));
-  --checker: repeating-conic-gradient(#000 0 25%, transparent 0 50%) 0 0 / calc(2 * var(--dot)) calc(2 * var(--dot));   /* as a mask */
   --btn: var(--btn-l);
   --btn-on: var(--btn-on-l);
   --btn-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' shape-rendering='crispEdges'%3E%3Cpath fill='black' d='M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2H11zM0 4h1v5H0zM12 4h1v5H12zM1 9h1v2H1zM11 9h1v2H11zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4z'/%3E%3Cpath fill='white' d='M4 1h5v1H4zM2 2h9v2H2zM1 4h11v5H1zM2 9h9v2H2zM4 11h5v1H4z'/%3E%3C/svg%3E");
@@ -75,7 +74,7 @@ a { color: inherit; cursor: inherit; }
 /* Nothing reacts to hover. Things invert while pressed, and keyboard focus inverts them too. */
 :focus-visible { outline: none; }
 
-/* Menu bar: the name on the left, which goes home; GitHub, X and the light/dark toggle on the right */
+/* Menu bar: the name on the left, which goes home; GitHub, the light/dark toggle and X on the right */
 .menubar {
   position: fixed;
   inset: 0 0 auto 0;
@@ -126,11 +125,11 @@ a { color: inherit; cursor: inherit; }
 }
 .bomb { grid-row: span 2; display: block; width: 64px; height: 64px; shape-rendering: crispEdges; }
 .alert h1, .alert p { margin: 0; font: inherit; }
-.alert h1 { align-self: end; }
+.alert h1 { align-self: end; overflow-wrap: anywhere; }
 .buttons { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 16px; }
 
 /* Push buttons: a 1px frame with stepped corners, filled while pressed. The default button has a
-   thick ring with stepped corners around it; a dimmed one shows its name through the 50% pattern. */
+   thick ring with stepped corners around it. */
 .btn {
   display: block;
   min-width: 88px;
@@ -149,8 +148,6 @@ a { color: inherit; cursor: inherit; }
 .btn:active, .btn:focus-visible { border-image-source: var(--btn-on); color: var(--win); }
 .default { padding: 3px; background: var(--ink); clip-path: var(--stairs-7); }
 .default > span { display: block; padding: 1px; background: var(--win); clip-path: var(--stairs-5); }
-.btn:disabled span { -webkit-mask: var(--checker); mask: var(--checker); }
-.btn:disabled:active { border-image-source: var(--btn); color: inherit; }
 
 @media (max-width: 600px), (max-height: 500px) {
   .menubar { padding: 0; }
@@ -175,11 +172,10 @@ a { color: inherit; cursor: inherit; }
   <div class="alert">
     <div>
       <svg class="bomb" id="bomb" viewBox="0 0 32 32" aria-hidden="true"></svg>
-      <h1>Sorry, a system error occurred.</h1>
+      <h1>Sorry, there's no page at <span id="path"></span>.</h1>
       <p>ID = 404</p>
       <div class="buttons">
         <span class="default"><span><a class="btn" href="/"><span>Restart</span></a></span></span>
-        <button class="btn" type="button" disabled><span>Resume</span></button>
       </div>
     </div>
   </div>
@@ -222,15 +218,15 @@ const root = document.documentElement.style;
 root.setProperty("--stairs-5", stairs([5, 3, 2, 1, 1]));
 root.setProperty("--stairs-7", stairs([7, 5, 3, 2, 2, 1, 1]));
 
-// The bomb, 32x32, one character per pixel.
+// The bomb, 32x32, one character per pixel: # the bomb, * its sparks.
 const BOMB = [
-  "........................#..#..#.",
-  ".........................#.#.#..",
+  "........................*..*..*.",
+  ".........................*.*.*..",
   "................................",
-  "........................##...##.",
+  "........................**...**.",
   "................................",
-  ".........................#.#.#..",
-  ".......................##..#..#.",
+  ".........................*.*.*..",
+  ".......................**..*..*.",
   "......................#.........",
   "...................##.#.........",
   ".........######...####..........",
@@ -257,8 +253,22 @@ const BOMB = [
   ".........######.................",
   "................................",
 ];
-document.getElementById("bomb").innerHTML = `<path fill="currentColor" d="${BOMB.map((row, y) =>
-  [...row.matchAll(/#+/g)].map(m => `M${m.index} ${y}h${m[0].length}v1h-${m[0].length}z`).join("")).join("")}"/>`;
+// The bomb is black on a white mask in both modes, as an icon is, so in dark mode it reads as a bomb
+// and not a white blob. The mask is its silhouette, holes filled, grown by a pixel all round; the
+// sparks are ink.
+const runs = (rows) => rows.map((row, y) => [...row.matchAll(/1+/g)].map(m => `M${m.index} ${y}h${m[0].length}v1h-${m[0].length}z`).join("")).join("");
+const grid = (f) => BOMB.map((row, y) => [...row].map((c, x) => f(x, y) ? "1" : "0").join(""));
+const at = (x, y) => BOMB[y]?.[x];
+const outside = new Set();   // the paper reachable from the edges
+for (const todo = [[0, 0]]; todo.length;) {
+  const [x, y] = todo.pop(), k = y * 32 + x;
+  if (outside.has(k) || at(x, y) !== ".") continue;
+  outside.add(k);
+  todo.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+}
+const inBomb = (x, y) => at(x, y) !== undefined && at(x, y) !== "*" && !outside.has(y * 32 + x);
+const mask = grid((x, y) => [-1, 0, 1].some(dx => [-1, 0, 1].some(dy => inBomb(x + dx, y + dy))));
+document.getElementById("bomb").innerHTML = `<path fill="#fff" d="${runs(mask)}"/><path fill="#000" d="${runs(grid((x, y) => at(x, y) === "#"))}"/><path fill="currentColor" d="${runs(grid((x, y) => at(x, y) === "*"))}"/>`;
 
 /* Menu bar, like the home page's: the name goes home, and the links marked bar sit at the right. */
 const menubar = document.getElementById("menubar");
@@ -280,10 +290,11 @@ themeBtn.addEventListener("click", () => {
   labelTheme();
 });
 systemDark.addEventListener("change", labelTheme);
-extras.append(themeBtn);
+extras.lastChild.before(themeBtn);   // between the links, so the X in the corner doesn't read as a close box
 menubar.append(extras);
 labelTheme();
 
+document.getElementById("path").textContent = location.pathname;
 // Return restarts, as the outlined button says.
 addEventListener("keydown", e => { if (e.key === "Enter" && !e.target.closest("a, button")) location.href = "/"; });
 </script>

@@ -109,7 +109,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 /* Nothing reacts to hover. Things invert while pressed, and keyboard focus inverts them too. */
 :focus-visible { outline: none; }
 
-/* Menu bar: pull-down menus on the left; GitHub, X and the light/dark toggle on the right */
+/* Menu bar: pull-down menus on the left; GitHub, the light/dark toggle and X on the right */
 .menubar {
   position: fixed;
   inset: 0 0 auto 0;
@@ -407,9 +407,8 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 .run .controls { gap: 0; touch-action: none; }
 .run .clock { flex: 1; padding-left: 8px; }
 .run + p { margin-top: -4px; }
-/* About This Picture: a copy of the desk with the same dots */
+/* About This Picture */
 .window:where([data-id="picture"]) { width: min(400px, calc(100vw - 24px)); }
-.copy { position: relative; display: block; box-sizing: content-box; margin: 4px auto 12px; border: 1px solid var(--ink); image-rendering: pixelated; }
 
 /* Zoom rectangles, and the outline a dragged window leaves behind until it is let go */
 .zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
@@ -454,6 +453,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   }
   .icon { width: auto; min-width: 0; }
   .window, .window.wide { inset: 0 !important; width: auto; max-height: none !important; box-shadow: none; border-width: 0; }
+  .window[data-id="picture"] { inset: 0 0 auto !important; border-bottom-width: 1px; box-shadow: 0 1px 0 var(--ink); }   /* a line and two buttons need no whole screen: it hangs from the bar */
   .titlebar { height: 28px; padding: 8px 1px 7px; }
   .close { top: 8px; }
   .content { flex: 1; padding: 12px max(16px, calc((100% - 640px) / 2)) 16px; }
@@ -527,7 +527,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=b6e89fdc0b"></script>
+<script src="projects.js?v=5c73cea596"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -786,7 +786,8 @@ themeBtn.addEventListener("click", () => {
   try { localStorage.setItem("theme", next); } catch {}
   themeChanged();
 });
-extras.append(themeBtn);
+// Between the links, so the X in the corner doesn't read as a close box.
+extras.lastChild.before(themeBtn);
 labelTheme();
 
 /* Icon art: 32x32, 1-bit, in black on white, with the same name plus -selected and -open for the
@@ -1400,21 +1401,16 @@ function paint(next, lo, hi) {
   const on = ink();
   for (let k = starts[lo]; k < starts[hi]; k++) { const i = order[k]; px32[i] = next[i] ? on : 0; }
   pctx.putImageData(frame, 0, 0);
-  if (copy?.live) copy.paint(lo, hi);
 }
 async function show(n, dissolve) {
   const g = ++gen;
   clearTimeout(timer);
   shown = n;
   const p = SITE.pictures[n];
-  if (copy) copy.name(p);
+  if (windows.has("picture")) named(p);
   const img = await load(p);
   if (g !== gen) return;
   const next = dither(img, p, W, H);
-  if (copy?.live) {
-    copy.next = dither(img, p, copy.w, copy.h);
-    copy.crop(copy.shown ? [copy.shown, [p, img]] : [[p, img]]);   // room for both while it dissolves
-  }
   if (dissolve) {
     for (let k = 1; k <= STEPS; k++) {
       await new Promise(r => setTimeout(r, STEP_MS));
@@ -1423,7 +1419,6 @@ async function show(n, dissolve) {
     }
   } else paint(next, 0, 256);
   onDesk = n;
-  if (copy?.live) copy.crop([[p, img]]);
   if (still) return;
   timer = setTimeout(advance, HOLD[0] + Math.random() * (HOLD[1] - HOLD[0]));
 }
@@ -1454,7 +1449,6 @@ function themeChanged() {
   const on = ink();
   for (let i = 0; i < px32.length; i++) if (px32[i]) px32[i] = on;
   pctx.putImageData(frame, 0, 0);
-  if (copy?.live) copy.recolor();
 }
 systemDark.addEventListener("change", themeChanged);
 
@@ -1488,81 +1482,18 @@ function printSheet() {
 document.body.append(printSheet());
 const nextPicture = () => show(pick(shown), !still);
 
-/* About This Picture: a window with a copy of the desk picture, its title, its source page, and
-   a button for the next one. The copy has the desk's shape and dots, and dissolves with it. */
-let copy = null;   // the open window's copy, or null
+/* About This Picture: the picture's title, its source page, and a button for the next one. */
+let named = null;   // names the picture in the open window
 byId.set("picture", { id: "picture", name: "About This Picture", links: [],
   origin: () => titles.at(-1),   // it zooms out of the Desktop menu's title
   make() {
-    const canvas = el("canvas", { className: "copy" });
-    canvas.setAttribute("aria-hidden", "true");
     const caption = el("p");
-    const source = ext({ className: "btn" }, el("span", { textContent: "Source" }));
+    const source = ext({ className: "btn" }, el("span", { textContent: "Wikimedia Commons" }));
     const next = el("button", { type: "button", className: "btn" }, el("span", { textContent: "Next Picture" }));
     next.addEventListener("click", nextPicture);
-    const ctx = canvas.getContext("2d");
-    const c = copy = { canvas, w: 0, h: 0, y0: 0, cap: 0, shown: null,
-      // Sized and still in the open window, not one closed or closing.
-      get live() { return c.w > 0 && windows.get("picture")?.contains(canvas); },
-      name(p) { caption.textContent = p.title; source.href = p.page; source.setAttribute("aria-label", "Source of " + p.title + ", on Wikimedia Commons"); },
-      // Dots ranked from lo up to hi take the picture in next.
-      paint(lo, hi) {
-        const on = ink();
-        for (let i = 0; i < c.rank.length; i++) if (c.rank[i] >= lo && c.rank[i] < hi) c.px32[i] = c.next[i] ? on : 0;
-        ctx.putImageData(c.frame, 0, -c.y0);
-      },
-      recolor() {
-        const on = ink();
-        for (let i = 0; i < c.px32.length; i++) if (c.px32[i]) c.px32[i] = on;
-        ctx.putImageData(c.frame, 0, -c.y0);
-      },
-      // Show only the rows with pictures ps ([picture, image] pairs) in them: a drawing's own band
-      // and a margin, a photo's whole height. A band taller than the cap is cut where the last
-      // picture is placed. On a tall phone this is the difference between a drawing and a tall box.
-      crop(ps) {
-        let y0 = c.h, y1 = 0;
-        const pad = Math.round(c.w * 0.05);
-        for (const [p, img] of ps) {
-          const [, y, , h] = p.kind === "photo" ? [0, 0, 0, c.h] : framed(img, p, c.w, c.h);
-          y0 = Math.min(y0, Math.max(0, Math.floor(y - pad)));
-          y1 = Math.max(y1, Math.min(c.h, Math.ceil(y + h + pad)));
-        }
-        const over = y1 - y0 - c.cap;
-        if (over > 0) { y0 += Math.round(over * ps.at(-1)[0].position[1]); y1 = y0 + c.cap; }
-        c.shown = ps.at(-1);
-        c.y0 = y0;
-        canvas.height = y1 - y0;
-        canvas.style.height = canvas.height * c.k / devicePixelRatio + "px";
-        ctx.putImageData(c.frame, 0, -y0);
-      },
-    };
-    c.name(SITE.pictures[shown]);
-    // The desk's shape, as wide as the window allows, in whole desk dots; crop() then keeps the
-    // rows the picture is in, at most 55% of the screen's height.
-    const fit = () => {
-      if (copy !== c || !canvas.isConnected) return ro.disconnect();
-      const dpr = devicePixelRatio, k = Math.max(1, Math.round(dpr));
-      const aspect = desk.clientWidth / desk.clientHeight;
-      const box = getComputedStyle(canvas.parentNode);
-      const css = canvas.parentNode.clientWidth - parseFloat(box.paddingLeft) - parseFloat(box.paddingRight) - 2;
-      const w = Math.floor(css * dpr / k), h = Math.round(w / aspect);
-      if (w === c.w && h === c.h) return;
-      Object.assign(c, { w, h, k, y0: 0, shown: null, cap: Math.floor(innerHeight * 0.55 * dpr / k) });
-      canvas.width = w;
-      canvas.height = 0;
-      canvas.style.width = w * k / dpr + "px";
-      canvas.style.height = "0px";
-      c.frame = ctx.createImageData(w, h);
-      c.px32 = new Uint32Array(c.frame.data.buffer);
-      c.rank = new Uint8Array(w * h);
-      for (let i = 0; i < c.rank.length; i += 65536) crypto.getRandomValues(c.rank.subarray(i, i + 65536));
-      const n = shown, p = SITE.pictures[n];
-      load(p).then(img => { if (copy === c && shown === n) { c.next = dither(img, p, w, h); c.crop([[p, img]]); c.paint(0, 256); snap(canvas); } });
-    };
-    // The window's width follows the screen's, and so does the desk's.
-    const ro = new ResizeObserver(fit);
-    ro.observe(desk);
-    return [canvas, caption, el("div", { className: "buttons" }, [source, next])];
+    named = (p) => { caption.textContent = p.title; source.href = p.page; source.setAttribute("aria-label", p.title + ", on Wikimedia Commons"); };
+    named(SITE.pictures[shown]);
+    return [caption, el("div", { className: "buttons" }, [source, next])];
   },
 });
 

@@ -85,7 +85,7 @@ a { color: inherit; }
 .menubar a:focus-visible, .menubar a:active { background: var(--ink); color: var(--win); outline: none; }
 
 /* Desktop and icons */
-.desk { position: fixed; inset: var(--bar) 0 0 0; overflow: hidden; background: var(--win); }
+.desk { position: fixed; inset: var(--bar) 0 0 0; overflow: clip; background: var(--win); }   /* clip, so focus never scrolls the desk */
 .picture {
   position: absolute;
   inset: 0;
@@ -206,6 +206,7 @@ a { color: inherit; }
 .close:active .burst { display: block; }
 .window:not(.front) .close { visibility: hidden; }
 .content { overflow: auto; padding: 14px 20px 20px; overscroll-behavior: contain; }
+.window:focus, .content:focus { outline: none; }   /* the striped title bar marks the active window */
 .content p { margin: 0 0 14px; }
 .content > :last-child { margin-bottom: 0; }
 
@@ -465,11 +466,11 @@ for (const item of items) {
   b.addEventListener("pointerdown", e => e.stopPropagation());
   b.addEventListener("click", e => {
     // Keyboard (detail 0) and touch open on one activation; a mouse selects, then double-click opens.
-    if (e.detail === 0 || b.lastPointer === "touch" || b.lastPointer === "pen") open(item.id);
+    if (e.detail === 0 || b.lastPointer === "touch" || b.lastPointer === "pen") open(item.id, b);
     else select(item.id);
   });
   b.addEventListener("pointerup", e => { b.lastPointer = e.pointerType; });
-  b.addEventListener("dblclick", () => open(item.id));
+  b.addEventListener("dblclick", () => open(item.id, b));
   icons.set(item.id, b);
   iconList.append(el("li", {}, b));
 }
@@ -576,7 +577,7 @@ function scores(s) {
   return [ol, note];
 }
 function content(item) {
-  const c = el("div", { className: "content" });
+  const c = el("div", { className: "content", tabIndex: 0 });   // focusable, so keys scroll it
   for (const p of item.body || []) {
     // [text](url) in a paragraph becomes a link.
     const parts = p.split(/\[([^\]]+)\]\(([^)]+)\)/);
@@ -589,7 +590,7 @@ function content(item) {
         el("span", { className: "year", textContent: p.year }),
         el("span", { className: "blurb", textContent: p.blurb }),
       ]);
-      b.addEventListener("click", () => open(p.id));
+      b.addEventListener("click", () => open(p.id, b));
       return el("li", {}, b);
     })));
   }
@@ -599,7 +600,7 @@ function content(item) {
     const b = el("button", { className: "composite", type: "button" }, item.images.map(i => el("img", { src: i.src, alt: i.alt })));
     byId.set(id, { id, name: item.name + " images", pictures: item.images, links: [], wide: true, origin: b });
     b.setAttribute("aria-label", "Open " + item.name + " images");
-    b.addEventListener("click", () => open(id));
+    b.addEventListener("click", () => open(id, b));
     c.append(b);
   }
   if (item.pictures) c.append(el("div", { className: "pictures" }, item.pictures.map(i => el("figure", {}, [el("img", { src: i.src, alt: i.alt }), el("figcaption", { textContent: i.alt })]))));
@@ -619,20 +620,23 @@ function front(w) {
   for (const o of windows.values()) o.classList.toggle("front", o === w);
   w.style.zIndex = ++z;
 }
-function open(id) {
+function open(id, opener) {
   const item = byId.get(id);
   if (!item) return;
   const icon = icons.get(id);
   if (icon) select(id);
   history.replaceState(null, "", "#" + id);
-  if (windows.has(id)) { const w = windows.get(id); front(w); w.focus(); return; }
+  if (windows.has(id)) { const w = windows.get(id); front(w); w.body.focus(); return; }
 
   const closeBtn = el("button", { className: "close", type: "button", innerHTML:
     '<svg class="x" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z" fill="currentColor"/></svg>' +
     '<svg class="burst" viewBox="0 0 7 7"><path d="M0 0h1v1H0zM1 1h1v1H1zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM1 5h1v1H1zM0 6h1v1H0zM3 0h1v2H3zM3 5h1v2H3zM0 3h2v1H0zM5 3h2v1H5z" fill="currentColor"/></svg>' });
   closeBtn.setAttribute("aria-label", "Close");
   const title = el("div", { className: "titlebar" }, [closeBtn, el("h2", { textContent: item.name })]);
-  const w = el("section", { className: item.wide ? "window wide" : "window", tabIndex: -1 }, [title, content(item)]);
+  const body = content(item);
+  const w = el("section", { className: item.wide ? "window wide" : "window", tabIndex: -1 }, [title, body]);
+  w.body = body;
+  w.opener = opener;
   w.origin = icon ? icon.querySelector("canvas") : item.origin;
   w.setAttribute("aria-label", item.name);
   w.style.visibility = "hidden";
@@ -651,10 +655,11 @@ function open(id) {
 
   zoom(w.origin.getBoundingClientRect(), w.getBoundingClientRect(), () => {
     w.style.visibility = "";
-    w.focus();
+    if (w.classList.contains("front")) w.body.focus();
   });
 
   w.addEventListener("pointerdown", () => front(w));
+  w.addEventListener("focusin", () => front(w));
   closeBtn.addEventListener("pointerdown", e => e.stopPropagation());
   closeBtn.addEventListener("click", () => close(id));
   drag(w, title);
@@ -665,6 +670,10 @@ function close(id) {
   const icon = icons.get(id);
   const from = w.getBoundingClientRect();
   const back = w.origin.isConnected ? w.origin.getBoundingClientRect() : from;
+  // Focus goes back to what opened the window if it is still in view and not covered.
+  const c = w.opener && w.opener.isConnected && w.opener.getBoundingClientRect();
+  const hit = c && document.elementsFromPoint(c.left + c.width / 2, c.top + c.height / 2).find(n => !w.contains(n));
+  const opener = hit && w.opener.contains(hit) && w.opener;
   for (const v of w.querySelectorAll("video")) v.pause();
   windows.delete(id);
   w.inert = true;
@@ -686,7 +695,7 @@ function close(id) {
   if (next) { front(next); history.replaceState(null, "", "#" + [...windows].find(([, v]) => v === next)[0]); }
   else history.replaceState(null, "", location.pathname);
   w.style.zIndex = shield.style.zIndex = ++z;   // stay on top while it flickers out
-  if (w.origin.isConnected) (icon || w.origin).focus();
+  (opener || (next ? next.body : icon))?.focus();
 }
 function drag(w, handle) {
   let sx, sy, ox, oy;

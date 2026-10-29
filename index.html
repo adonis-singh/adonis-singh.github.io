@@ -88,9 +88,9 @@ a { color: inherit; }
 .desk { position: fixed; inset: var(--bar) 0 0 0; overflow: clip; background: var(--win); }   /* clip, so focus never scrolls the desk */
 .picture {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: 0;
+  top: 0;
+  image-rendering: pixelated;
   pointer-events: none;
 }
 .icons { position: relative; }
@@ -775,14 +775,12 @@ const DEPTH = 0.5;    // darkest tone, as a share of pixels inked; keeps the pic
 const picture = el("canvas", { className: "picture" });
 desk.prepend(picture);
 const pctx = picture.getContext("2d");
-const dots = el("canvas");
-const dctx = dots.getContext("2d");
 const sources = new Map();
 const load = p => sources.get(p) || sources.set(p, new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = p.src; })).get(p);
-let W, H, K, frame, px32, rank, inkPx, cur, gen = 0, timer;
+let W, H, K, frame, px32, order, starts, gen = 0, timer;
 const pick = (not) => { const n = Math.floor(Math.random() * (SITE.pictures.length - 1)); return n >= not ? n + 1 : n; };
-let shown = Math.floor(Math.random() * SITE.pictures.length);
-let upcoming = pick(shown);
+let shown = Math.floor(Math.random() * SITE.pictures.length);   // the picture on the desk, or dissolving in
+let onDesk = shown;                                             // the picture a dissolve starts from
 
 // The ? in the corner names the picture and opens its source page.
 const about = ext({ className: "about", textContent: "?" });
@@ -793,24 +791,30 @@ function label(p) {
   about.setAttribute("aria-label", "About the desktop picture: " + p.title);
 }
 
-// The canvas has one pixel per screen pixel. Each dot is a whole number of screen pixels, K,
-// so a display scaled by 1.25 or 1.5 shows even dots with no moiré.
+// The canvas has one pixel per dot, and CSS scales it up without smoothing. Each dot is a whole
+// number of screen pixels, K, so a display scaled by 1.25 or 1.5 shows even dots with no moiré.
 function size() {
   const dpr = devicePixelRatio;
   K = Math.max(1, Math.round(dpr));
-  picture.width = Math.round(desk.clientWidth * dpr);
-  picture.height = Math.round(desk.clientHeight * dpr);
-  W = Math.ceil(picture.width / K);
-  H = Math.ceil(picture.height / K);
-  dots.width = W;
-  dots.height = H;
-  frame = dctx.createImageData(W, H);
+  W = picture.width = Math.ceil(Math.round(desk.clientWidth * dpr) / K);
+  H = picture.height = Math.ceil(Math.round(desk.clientHeight * dpr) / K);
+  picture.style.width = W * K / dpr + "px";
+  picture.style.height = H * K / dpr + "px";
+  frame = pctx.createImageData(W, H);
   px32 = new Uint32Array(frame.data.buffer);
-  rank = new Uint8Array(W * H);
+  // Each dot gets a random rank from 0 to 255, and the dissolve takes them in rank order.
+  // order lists the dots sorted by rank; rank r's dots are order[starts[r]] up to order[starts[r + 1]].
+  const rank = new Uint8Array(W * H);
   for (let i = 0; i < rank.length; i += 65536) crypto.getRandomValues(rank.subarray(i, i + 65536));
-  // Ink is opaque white in dark mode and opaque black in light mode, as ABGR on little-endian.
-  inkPx = isDark() ? 0xffffffff : 0xff000000;
+  starts = new Uint32Array(257);
+  for (const r of rank) starts[r + 1]++;
+  for (let r = 1; r <= 256; r++) starts[r] += starts[r - 1];
+  const at = starts.slice(0, 256);
+  order = new Uint32Array(W * H);
+  for (let i = 0; i < rank.length; i++) order[at[rank[i]]++] = i;
 }
+// Ink is opaque white in dark mode and opaque black in light mode, as ABGR on little-endian.
+const ink = () => isDark() ? 0xffffffff : 0xff000000;
 // 8x8 Bayer thresholds for the ordered dither.
 const BAYER = [0,32,8,40,2,34,10,42,48,16,56,24,50,18,58,26,12,44,4,36,14,46,6,38,60,28,52,20,62,30,54,22,3,35,11,43,1,33,9,41,51,19,59,27,49,17,57,25,15,47,7,39,13,45,5,37,63,31,55,23,61,29,53,21].map(v => (v + 0.5) / 64);
 // The picture as 1-bit ink: a drawing with an ordered dither, a photo with Floyd-Steinberg.
@@ -847,18 +851,18 @@ function dither(img, p) {
   }
   return out;
 }
-// Pixels whose random rank is below the threshold show the next picture.
-function paint(from, to, threshold) {
-  for (let i = 0; i < W * H; i++) px32[i] = (rank[i] < threshold ? to[i] : from[i]) ? inkPx : 0;
-  dctx.putImageData(frame, 0, 0);
-  pctx.imageSmoothingEnabled = false;
-  pctx.clearRect(0, 0, picture.width, picture.height);
-  pctx.drawImage(dots, 0, 0, W * K, H * K);
+// Dots ranked from lo up to hi take the next picture's dots.
+function paint(next, lo, hi) {
+  const on = ink();
+  for (let k = starts[lo]; k < starts[hi]; k++) { const i = order[k]; px32[i] = next[i] ? on : 0; }
+  pctx.putImageData(frame, 0, 0);
 }
 async function show(n, dissolve) {
   const g = ++gen;
   clearTimeout(timer);
+  shown = n;
   const p = SITE.pictures[n];
+  label(p);
   const img = await load(p);
   if (g !== gen) return;
   const next = dither(img, p);
@@ -866,20 +870,16 @@ async function show(n, dissolve) {
     for (let k = 1; k <= STEPS; k++) {
       await new Promise(r => setTimeout(r, STEP_MS));
       if (g !== gen) return;
-      paint(cur, next, (k * 256) / STEPS);
+      paint(next, Math.ceil((k - 1) * 256 / STEPS), Math.ceil(k * 256 / STEPS));
     }
-  } else paint(next, next, 0);
-  cur = next;
-  shown = n;
-  label(p);
+  } else paint(next, 0, 256);
+  onDesk = n;
   if (still) return;
-  upcoming = pick(n);
-  load(SITE.pictures[upcoming]);
   timer = setTimeout(advance, HOLD[0] + Math.random() * (HOLD[1] - HOLD[0]));
 }
 function advance() {
   if (document.hidden) return document.addEventListener("visibilitychange", advance, { once: true });
-  show(upcoming, true);
+  show(pick(shown), true);
 }
 function redraw() { size(); show(shown, false); }
 // The desk draws once it has a size, and again after it is resized.
@@ -888,9 +888,13 @@ new ResizeObserver(() => {
   clearTimeout(resizing);
   if (desk.clientWidth && desk.clientHeight) resizing = setTimeout(redraw, W ? 150 : 0);
 }).observe(desk);
+// Only a "theme" picture's dots change with the theme. Otherwise just the ink does, and a dissolve carries on.
 function themeChanged() {
   labelTheme();
-  redraw();
+  if (SITE.pictures[shown].marks === "theme" || SITE.pictures[onDesk].marks === "theme") return show(shown, false);
+  const on = ink();
+  for (let i = 0; i < px32.length; i++) if (px32[i]) px32[i] = on;
+  pctx.putImageData(frame, 0, 0);
 }
 systemDark.addEventListener("change", themeChanged);
 </script>

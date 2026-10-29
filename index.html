@@ -402,9 +402,9 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 .window:where([data-id="picture"]) { width: min(400px, calc(100vw - 24px)); }
 .copy { position: relative; display: block; box-sizing: content-box; margin: 4px auto 12px; border: 1px solid var(--ink); image-rendering: pixelated; }
 
-/* Zoom rectangles, and the dotted outline a dragged window leaves behind until it is let go */
+/* Zoom rectangles, and the outline a dragged window leaves behind until it is let go */
 .zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
-.dragrect { position: fixed; z-index: 9999; border: 1px dotted #fff; mix-blend-mode: difference; pointer-events: none; }   /* inverts what it crosses */
+.dragrect { position: fixed; z-index: 9999; border: 1px solid #fff; mix-blend-mode: difference; pointer-events: none; }   /* inverts what it crosses, so it reads on any picture */
 .shield { position: absolute; }
 
 /* Mac scroll bars inside windows: arrow boxes, a track in the 50% pattern, and a square box that
@@ -677,6 +677,7 @@ for (const it of menuList.querySelectorAll('.menu [role="menuitem"]')) {
     wasOpen = true;
     held = true;
   });
+  it.addEventListener("auxclick", closeMenu);   // a middle-click opens the link in a new tab
   it.addEventListener("click", e => {
     if (!e.isTrusted) return;   // choose() clicking a link item: let it go
     e.preventDefault();
@@ -747,6 +748,7 @@ menubar.append(menuList);
 
 // Links marked bar are also on the bar itself, one click away.
 const extras = el("div", { className: "extras" });
+extras.addEventListener("pointerdown", closeMenu);   // the shield is under the bar, so it can't
 for (const l of SITE.links.filter(l => l.bar)) extras.append(ext({ className: "link", href: l.href }, el("span", { textContent: l.label })));
 menubar.append(extras);
 
@@ -1177,22 +1179,33 @@ function close(id, popped) {
   (opener || (next ? next.body : icon))?.focus();   // this can bring a window to the front, so it goes first
   w.style.zIndex = shield.style.zIndex = ++z;   // stay on top while it flickers out
 }
-// Keep a window's close box and at least 120px of its title bar on the desk, below the menu bar,
-// on whole pixels. Its height is capped from its top, so its bottom stays on the desk and content
-// that loads later scrolls instead of running off.
-const clamp = (left, top) => [Math.round(Math.max(0, Math.min(left, desk.clientWidth - 120))), Math.round(Math.max(0, Math.min(top, desk.clientHeight - 120)))];
-function place(w, left, top) {
-  [left, top] = clamp(left, top);
+// Keep a window's close box, at least 120px of its title bar, and the whole height of the title bar
+// on the desk, below the menu bar, on whole pixels.
+const clamp = (w, left, top) => [Math.round(Math.max(0, Math.min(left, desk.clientWidth - 120))), Math.round(Math.max(0, Math.min(top, desk.clientHeight - w.firstChild.offsetHeight - 1)))];
+// A window that fits is capped from its top, so its bottom stays on the desk and content that loads
+// later scrolls instead of running off. One that is moved keeps its height and may run off the
+// bottom; it only grows if moved up.
+function place(w, left, top, keep) {
+  [left, top] = clamp(w, left, top);
+  const fit = desk.clientHeight - top - 12;
   w.style.left = left + "px";
   w.style.top = top + "px";
-  w.style.maxHeight = desk.clientHeight - top - 12 + "px";
+  w.style.maxHeight = (keep ? Math.max(fit, w.offsetHeight) : fit) + "px";
 }
-new ResizeObserver(() => { for (const w of windows.values()) place(w, parseFloat(w.style.left), parseFloat(w.style.top)); }).observe(desk);
-// Dragging a title bar moves a dotted outline of the window, and the window jumps there when it
+// When the desk is resized, a window that ran off its bottom stays as it is; the others fit again.
+let deskHeight = desk.clientHeight;
+new ResizeObserver(() => {
+  for (const w of windows.values()) {
+    const top = parseFloat(w.style.top);   // where it sits on a big screen; phones show it full-screen
+    place(w, parseFloat(w.style.left), top, !phone.matches && top + w.offsetHeight > deskHeight - 12);
+  }
+  deskHeight = desk.clientHeight;
+}).observe(desk);
+// Dragging a title bar moves an outline of the window, and the window jumps there when it
 // is let go, as on the Mac, which couldn't redraw a window while it moved.
 function drag(w, handle) {
   let sx, sy, ox, oy, outline;
-  const to = e => clamp(ox + e.clientX - sx, oy + e.clientY - sy);
+  const to = e => clamp(w, ox + e.clientX - sx, oy + e.clientY - sy);
   const move = ([x, y]) => { outline.style.left = desk.offsetLeft + x + "px"; outline.style.top = desk.offsetTop + y + "px"; };
   handle.addEventListener("pointerdown", e => {
     if (phone.matches || e.button !== 0) return;
@@ -1202,10 +1215,10 @@ function drag(w, handle) {
     Object.assign(outline.style, { width: w.offsetWidth + "px", height: w.offsetHeight + "px" });
     move([ox, oy]);
     document.body.append(outline);
+    handle.addEventListener("lostpointercapture", () => outline.remove(), { once: true });
   });
   handle.addEventListener("pointermove", e => { if (handle.hasPointerCapture(e.pointerId)) move(to(e)); });
-  handle.addEventListener("pointerup", e => { if (handle.hasPointerCapture(e.pointerId)) place(w, ...to(e)); });
-  handle.addEventListener("lostpointercapture", () => outline.remove());
+  handle.addEventListener("pointerup", e => { if (handle.hasPointerCapture(e.pointerId)) place(w, ...to(e), true); });
 }
 
 // Space plays or pauses the video in the front window, unless a button or link has focus.
@@ -1240,8 +1253,11 @@ addEventListener("popstate", () => {
     // An entry that opens no window shares the number of the one before, so Back skips it.
     history.replaceState({ n: byId.has(id) && !windows.has(id) ? ++here : here, id }, "");
     open(id, null, here);
-  } else if (s.n < here) {   // Back
-    for (; here > s.n; here--) { const w = frontmost(); if (w) close(w.dataset.id, true); }
+  } else if (s.n < here) {   // Back closes the windows opened after this entry; if there are none, it goes back again
+    here = s.n;
+    const newer = [...windows.values()].filter(w => w.entry > s.n);
+    for (const w of newer) close(w.dataset.id, true);
+    if (!newer.length) return history.back();
   } else if (s.n > here) {   // Forward
     here = s.n;
     open(s.id, null, here);
@@ -1539,13 +1555,13 @@ function nearest(from, key) {
   return best;
 }
 
-// Every visit starts with the Read Me open; a window named in the URL opens on top of it.
-// A reload keeps its place in history and adds no entry.
+// Every visit starts with the Read Me open; a window named in the URL opens on top of it, on the
+// entry the visit arrived on, so one Back leaves. A reload keeps its place in history and adds no entry.
 const start = location.hash.slice(1);
 if (history.state) here = history.state.n;
-else history.replaceState({ n: 0, id: "readme" }, "");
-open("readme", null, here);
-open(start, null, here || undefined);
+else history.replaceState({ n: 0, id: start || "readme" }, "");
+open("readme", null, 0);
+open(start, null, here);
 </script>
 </body>
 </html>

@@ -513,7 +513,7 @@ function player(src, poster, name) {
   const fill = el("span");
   const playSvg = '<svg class="i-play" viewBox="0 0 10 10"><path d="M2 0h1v10H2zM3 1h1v8H3zM4 2h1v6H4zM5 3h1v4H5zM6 4h1v2H6z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 10 10"><path d="M1 0h3v10H1zM6 0h3v10H6z" fill="currentColor"/></svg>';
   const btn = el("button", { className: "play", type: "button", innerHTML: playSvg });
-  btn.setAttribute("aria-label", "Play or pause");
+  btn.setAttribute("aria-label", "Play");
   const track = el("div", { className: "track", tabIndex: 0 }, el("div", { className: "scrub" }, fill));
   for (const [k, v] of [["role", "slider"], ["aria-label", "Seek"], ["aria-valuemin", "0"], ["aria-valuemax", "100"], ["aria-valuenow", "0"]]) track.setAttribute(k, v);
   const wrap = el("div", { className: "player paused" }, [video, el("div", { className: "controls" }, [btn, track])]);
@@ -523,27 +523,29 @@ function player(src, poster, name) {
     track.setAttribute("aria-valuenow", Math.round(pct));
     if (!video.paused) requestAnimationFrame(tick);
   };
-  video.addEventListener("play", () => { wrap.classList.remove("paused"); requestAnimationFrame(tick); });
-  video.addEventListener("pause", () => wrap.classList.add("paused"));
+  video.addEventListener("play", () => { wrap.classList.remove("paused"); btn.setAttribute("aria-label", "Pause"); requestAnimationFrame(tick); });
+  video.addEventListener("pause", () => { wrap.classList.add("paused"); btn.setAttribute("aria-label", "Play"); });
   video.addEventListener("seeked", tick);
   wrap.toggle = () => { wrap.userPaused = !video.paused; video.paused ? video.play() : video.pause(); };
   btn.addEventListener("click", wrap.toggle);
   video.addEventListener("click", wrap.toggle);
-  // Press anywhere along the bar and drag to scrub.
+  // Press anywhere along the bar and drag to scrub. Seeking needs the duration, so it starts with the metadata.
   const seek = (e) => {
     const r = track.firstChild.getBoundingClientRect();
     const t = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
     fill.style.width = t * 100 + "%";
     video.currentTime = t * video.duration;
   };
-  track.addEventListener("pointerdown", e => { track.setPointerCapture(e.pointerId); seek(e); });
-  track.addEventListener("pointermove", e => { if (track.hasPointerCapture(e.pointerId)) seek(e); });
-  track.addEventListener("keydown", e => {
-    const step = { ArrowLeft: -2, ArrowRight: 2 }[e.key];
-    if (!step) return;
-    e.preventDefault();
-    video.currentTime = Math.min(video.duration, Math.max(0, video.currentTime + step));
-  });
+  video.addEventListener("loadedmetadata", () => {
+    track.addEventListener("pointerdown", e => { track.setPointerCapture(e.pointerId); seek(e); });
+    track.addEventListener("pointermove", e => { if (track.hasPointerCapture(e.pointerId)) seek(e); });
+    track.addEventListener("keydown", e => {
+      const to = { ArrowLeft: video.currentTime - 2, ArrowRight: video.currentTime + 2, Home: 0, End: video.duration }[e.key];
+      if (to === undefined) return;
+      e.preventDefault();
+      video.currentTime = Math.min(video.duration, Math.max(0, to));
+    });
+  }, { once: true });
   // Play only while on screen, and never if the visitor paused it or prefers no motion.
   new IntersectionObserver(([e]) => {
     if (e.isIntersecting && !wrap.userPaused && !still) video.play();
@@ -696,7 +698,12 @@ function close(id, popped) {
   ];
   let at = 0;
   for (const f of frames) { at += 25 + Math.random() * 40; setTimeout(f, at); }
-  setTimeout(() => { w.remove(); shield.remove(); zoom(from, back, () => {}); }, at + 30);
+  setTimeout(() => {
+    w.remove();
+    shield.remove();
+    for (const v of w.querySelectorAll("video")) { v.removeAttribute("src"); v.load(); }   // stop downloading
+    zoom(from, back, () => {});
+  }, at + 30);
   const next = frontmost();
   if (next) front(next);
   else { name(null); cascade = 0; }

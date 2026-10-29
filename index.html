@@ -63,30 +63,39 @@ button { font: inherit; color: inherit; }
 a { color: inherit; }
 :focus-visible { outline: 1px dotted var(--ink); outline-offset: 2px; }
 
-/* Menu bar */
+/* Menu bar: pull-down menus on the left; GitHub, X and the light/dark toggle on the right */
 .menubar {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 10000;
   display: flex;
   height: var(--bar);
-  margin: 0;
   padding: 0 8px;
-  list-style: none;
   background: var(--win);
   border-bottom: 1px solid var(--ink);
+  user-select: none;
+  -webkit-user-select: none;
 }
-.menubar a {
+.menus { display: flex; margin: 0; padding: 0; list-style: none; }
+.menus > li { position: relative; }
+.title, .menubar .link {
   display: block;
   height: calc(var(--bar) - 1px);
   padding: 0 10px;
+  border: 0;
+  background: none;
   line-height: calc(var(--bar) - 1px);
   text-decoration: none;
   white-space: nowrap;
+  cursor: default;
+  -webkit-touch-callout: none;
 }
 .menubar .me { -webkit-text-stroke: 0.5px currentColor; }
-.menubar .theme { margin-left: auto; }
-.menubar button {
+.title[aria-expanded="true"], .menubar .link:active { background: var(--ink); color: var(--win); }
+.title:focus-visible, .menubar .link:focus-visible { outline-offset: -4px; }
+.title[aria-expanded="true"]:focus-visible { outline-color: var(--win); }
+.extras { display: flex; margin-left: auto; }
+.theme {
   display: grid;
   place-items: center;
   width: 36px;
@@ -96,9 +105,36 @@ a { color: inherit; }
   background: none;
   cursor: default;
 }
-.menubar button svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
-.menubar button:focus-visible, .menubar button:active { background: var(--ink); color: var(--win); outline: none; }
-.menubar a:focus-visible, .menubar a:active { background: var(--ink); color: var(--win); outline: none; }
+.theme svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
+.theme:focus-visible, .theme:active { background: var(--ink); color: var(--win); outline: none; }
+/* A menu hangs from its title, its top edge on the bar's bottom line. */
+.menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--win);
+  border: 1px solid var(--ink);
+  box-shadow: 1px 1px 0 var(--ink);
+  white-space: nowrap;
+}
+.menu a {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 0 16px;
+  line-height: 22px;
+  text-decoration: none;
+  cursor: default;
+  -webkit-touch-callout: none;
+}
+.menu a.on { background: var(--ink); color: var(--win); }
+.menu a:focus-visible { outline: none; }   /* the highlight shows where the keys are */
+.menu [role="separator"] { height: 9px; background: repeating-linear-gradient(to right, var(--ink) 0 1px, transparent 1px 2px) 0 4px / 100% 1px no-repeat; }
+.menushield { position: fixed; inset: 0; z-index: 9998; }   /* takes the click that closes a menu */
 
 /* Desktop and icons */
 .desk { position: fixed; inset: var(--bar) 0 0 0; overflow: clip; background: var(--win); }   /* clip, so focus never scrolls the desk */
@@ -109,22 +145,6 @@ a { color: inherit; }
   image-rendering: pixelated;
   pointer-events: none;
 }
-.about {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  z-index: 1;
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--ink);
-  border-radius: 50%;
-  background: var(--win);
-  font-size: 15px;
-  line-height: 22px;
-  text-align: center;
-  text-decoration: none;
-}
-.about:focus-visible, .about:active { background: var(--ink); color: var(--win); outline: none; }
 .icons {
   position: relative;
   display: flex;
@@ -259,7 +279,7 @@ a { color: inherit; }
 .tweets li { display: grid; grid-template-columns: 7.5em 1fr; gap: 12px; }
 .tweets .date { opacity: 0.55; }
 @media (hover: hover) {
-  .menubar a:hover, .menubar button:hover, .about:hover, .index button:hover { background: var(--ink); color: var(--win); }
+  .menubar .link:hover, .theme:hover, .index button:hover { background: var(--ink); color: var(--win); }
   .tweets a:hover, .content p a:hover { background: var(--ink); color: var(--win); text-decoration: none; }
 }
 
@@ -328,13 +348,19 @@ a { color: inherit; }
 .scrub span { display: block; width: 0; height: 100%; background: var(--ink); }
 .player video { cursor: default; }
 
+/* About This Picture: a copy of the desk with the same dots */
+.window:where([data-id="picture"]) { width: min(400px, calc(100vw - 24px)); }
+.copy { display: block; box-sizing: content-box; margin: 4px auto 14px; border: 1px solid var(--ink); image-rendering: pixelated; }
+
 /* Zoom rectangles */
 .zoomrect { position: fixed; z-index: 9999; border: 1px solid var(--ink); pointer-events: none; }
 .shield { position: absolute; }
 
 @media (max-width: 600px), (max-height: 500px) {
   .menubar { padding: 0; }
-  .menubar a { padding: 0 7px; }
+  .title, .menubar .link { padding: 0 7px; }
+  /* Menus drop full width under the bar. */
+  .menu { position: fixed; top: calc(var(--bar) - 1px); right: 0; max-height: calc(100% - var(--bar) + 1px); overflow-y: auto; border-width: 1px 0; box-shadow: 0 1px 0 var(--ink); }
   .icons {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
@@ -354,29 +380,38 @@ a { color: inherit; }
 }
 @media (max-width: 360px) {
   .menubar { font-size: 15px; }
-  .menubar a { padding: 0 5px; }
-  .menubar button { width: 28px; }
+  .title, .menubar .link { padding: 0 5px; }
+  .theme { width: 32px; }
+}
+/* No room for GitHub on the bar; it is in the Adi Singh menu. */
+@media (max-width: 359px) {
+  .menubar .wide { display: none; }
 }
 /* Fingers need bigger targets than a mouse. */
 @media (pointer: coarse) {
   html { --bar: 34px; }
   .close::after { inset: -10px -12px; }
-  .about::after { content: ""; position: absolute; inset: -10px; }
   .tweets li { padding: 4px 0; }
-  .menubar a { min-width: 36px; text-align: center; }
+  .menubar .link { min-width: 36px; text-align: center; }
+  .menu a { line-height: 44px; }
+  .menu [role="separator"] { height: 13px; background-position-y: 6px; }
   .controls { height: 34px; }
   .play { width: 44px; height: 33px; }
+}
+/* Short screens: 40px still, so the longest menu fits a 320px-tall phone held sideways. */
+@media (pointer: coarse) and (max-height: 500px) {
+  .menu a { line-height: 40px; }
 }
 </style>
 </head>
 <body>
 
-<nav aria-label="Menu bar"><ul class="menubar" id="menubar"></ul></nav>
+<nav class="menubar" id="menubar" aria-label="Menu bar"></nav>
 <main class="desk" id="desk">
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=0508e7227e"></script>
+<script src="projects.js?v=bb5ec9e85e"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -400,23 +435,216 @@ const el = (tag, props = {}, kids = []) => {
   return n;
 };
 
-/* Menu bar */
-const menubar = document.getElementById("menubar");
-const me = el("a", { className: "me", href: "#readme", textContent: SITE.name });
-me.addEventListener("click", e => { e.preventDefault(); open("readme", me); });
-menubar.append(el("li", {}, me));
 const ext = (props) => el("a", { target: "_blank", rel: "noopener", ...props });
+const attrs = (n, a) => { for (const k in a) n.setAttribute(k, a[k]); return n; };
 const glyphs = {
   mail: '<svg viewBox="0 0 14 14"><rect y="2" width="14" height="10"/><path class="flap" d="M1 3.5l6 4.5 6-4.5" fill="none" stroke-width="1.4"/></svg>',
   x: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
 };
-for (const l of SITE.links) menubar.append(el("li", {}, ext({ href: l.href, textContent: l.label })));
+
+/* Menu bar. A mouse works it like the Mac's: press a title and the menu drops, drag to an item
+   and let go to choose it. Letting go on the title leaves the menu open to click an item in, and
+   while one is open, pointing at another title opens that one. The chosen item blinks three
+   times before it acts. Touch opens and chooses with taps; keys follow the ARIA menubar pattern. */
+const menubar = document.getElementById("menubar");
+const sep = { sep: true };
+const closeFront = () => { const w = frontmost(); if (w) close(w.dataset.id); };
+// An item is { label, act } or { label, href }; key is the key shown for it, and an item or
+// separator with when() is left out of the menu whenever when() is false.
+const MENUS = [
+  { title: SITE.name, className: "me", items: [
+    { label: "Read Me", act: () => open("readme") },
+    sep,
+    ...SITE.contact.map(l => ({ label: l.menu || l.label, href: l.href })),
+    sep,
+    ...SITE.links.map(l => ({ label: l.label, href: l.href })),
+  ] },
+  { title: "Projects", items: [
+    ...PROJECTS.map(p => ({ label: p.name, act: () => open(p.id) })),
+    { sep: true, when: () => windows.size },
+    { label: "Close Window", key: "Esc", act: closeFront, when: () => windows.size },
+  ] },
+  { title: "Desktop", items: [
+    { label: "Next Picture", act: () => nextPicture() },
+    { label: "About This Picture…", act: () => open("picture") },
+  ] },
+];
+const menuList = attrs(el("ul", { className: "menus" }), { role: "menubar", "aria-label": "Menus" });
+const titles = MENUS.map((def, n) => {
+  const t = attrs(el("button", { type: "button", className: "title " + (def.className || ""), textContent: def.title, id: "menu-" + n, tabIndex: n ? -1 : 0 }), { role: "menuitem", "aria-haspopup": "menu", "aria-expanded": "false" });
+  const m = attrs(el("ul", { className: "menu", hidden: true }), { role: "menu", "aria-labelledby": t.id });
+  for (const it of def.items) {
+    const li = it.sep ? attrs(el("li"), { role: "separator" }) : attrs(el("li", {}, menuItem(it)), { role: "none" });
+    li.when = it.when;
+    m.append(li);
+  }
+  t.menu = m;
+  menuList.append(attrs(el("li", {}, [t, m]), { role: "none" }));
+  return t;
+});
+function menuItem(it) {
+  const a = attrs(el("a", { tabIndex: -1 }, [el("span", { textContent: it.label })]), { role: "menuitem" });
+  if (it.key) a.append(attrs(el("span", { className: "key", textContent: it.key }), { "aria-hidden": "true" }));
+  if (it.key) a.setAttribute("aria-keyshortcuts", it.key === "Esc" ? "Escape" : it.key);
+  // A link item is a real link, so it can be middle-clicked or copied; choosing it clicks it.
+  if (it.href) Object.assign(a, { href: it.href }, it.href.startsWith("mailto:") ? {} : { target: "_blank", rel: "noopener" });
+  a.act = it.act || (() => a.click());
+  return a;
+}
+const shield = el("div", { className: "menushield", hidden: true });
+document.body.append(shield);
+let openTitle = null;      // the title whose menu is open
+let hot = null;         // the highlighted item
+let held = false;       // the mouse button went down on a title or item and is still down
+let wasOpen = false;    // the pressed title's menu was already open
+let blinking = false;
+let pointerKind = "";   // pointerType of the last press, to tell a mouse's click from a tap
+const visible = n => n.getClientRects().length > 0;
+const itemsOf = t => [...t.menu.querySelectorAll('[role="menuitem"]')].filter(visible);
+const titlesShown = () => titles.filter(visible);
+function openMenu(t) {
+  if (openTitle === t) return;
+  closeMenu();
+  for (const li of t.menu.children) li.hidden = li.when ? !li.when() : false;
+  t.menu.hidden = false;
+  t.setAttribute("aria-expanded", "true");
+  shield.hidden = false;
+  openTitle = t;
+  rove(t);
+}
+function closeMenu() {
+  if (!openTitle) return;
+  const t = openTitle;
+  if (t.menu.contains(document.activeElement)) t.focus();
+  highlight(null);
+  t.menu.hidden = true;
+  t.setAttribute("aria-expanded", "false");
+  shield.hidden = true;
+  openTitle = null;
+}
+function highlight(it, focus) {
+  if (hot) hot.classList.remove("on");
+  hot = it;
+  if (!it) return;
+  it.classList.add("on");
+  if (focus || openTitle.menu.contains(document.activeElement)) it.focus();
+}
+// Only one title is in the tab order: the last one used.
+function rove(t) { for (const o of titles) o.tabIndex = o === t ? 0 : -1; }
+async function choose(it) {
+  blinking = true;
+  highlight(it);
+  // Off, on, three times over, each frame held long enough to be seen; then the menu goes.
+  if (!still) for (let i = 0; i < 7; i++) { await new Promise(r => setTimeout(r, 45)); if (i < 6) it.classList.toggle("on"); }
+  closeMenu();
+  blinking = false;
+  it.act();
+}
+
+for (const t of titles) {
+  t.addEventListener("pointerdown", e => {
+    pointerKind = e.pointerType;
+    if (e.pointerType !== "mouse" || e.button !== 0 || blinking) return;
+    e.preventDefault();   // keeps focus where it is, as the Mac's menus did
+    wasOpen = openTitle === t;
+    held = true;
+    openMenu(t);
+  });
+  // A tap, or a click from the keyboard or a screen reader, toggles the menu.
+  t.addEventListener("click", e => {
+    if ((e.detail && pointerKind === "mouse") || blinking) return;
+    if (openTitle === t) return closeMenu();
+    openMenu(t);
+    if (!e.detail) highlight(itemsOf(t)[0], true);
+  });
+  t.addEventListener("focus", () => rove(t));
+}
+for (const it of menuList.querySelectorAll('.menu [role="menuitem"]')) {
+  it.addEventListener("pointerdown", e => {
+    pointerKind = e.pointerType;
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    e.preventDefault();
+    wasOpen = true;
+    held = true;
+  });
+  it.addEventListener("click", e => {
+    if (!e.isTrusted) return;   // choose() clicking a link item: let it go
+    e.preventDefault();
+    if ((e.detail && pointerKind === "mouse") || blinking) return;   // a mouse chooses on release
+    choose(it);
+  });
+}
+// The open menu follows the mouse, pressed or not.
+document.addEventListener("pointermove", e => {
+  if (!openTitle || blinking || e.pointerType !== "mouse") return;
+  const t = e.target.closest(".title");
+  if (t && t !== openTitle) openMenu(t);
+  const it = e.target.closest('.menu [role="menuitem"]');
+  if (it !== hot) highlight(it && openTitle.menu.contains(it) ? it : null);
+});
+document.addEventListener("pointerup", e => {
+  if (!held || e.pointerType !== "mouse") return;
+  held = false;
+  const it = e.target.closest('.menu [role="menuitem"]');
+  if (it && openTitle && openTitle.menu.contains(it)) return choose(it);
+  // Let go on the title just opened and the menu stays down; on an open one's title, it closes.
+  const t = e.target.closest(".title");
+  if (!t || (t === openTitle && wasOpen)) closeMenu();
+});
+// A mouse press outside closes the menu at once. A tap closes it on its click, so the click
+// lands on the shield and not on whatever is under it.
+shield.addEventListener("pointerdown", e => { pointerKind = e.pointerType; if (e.pointerType === "mouse") closeMenu(); });
+shield.addEventListener("click", closeMenu);
+// Keys. This listens before the page's own keys, so Escape closes a menu and not the front window.
+addEventListener("keydown", e => {
+  if (!openTitle) {
+    const t = document.activeElement.closest(".title");
+    if (!t) return;
+    const ts = titlesShown(), n = ts.indexOf(t);
+    const to = { ArrowRight: ts[(n + 1) % ts.length], ArrowLeft: ts[(n + ts.length - 1) % ts.length], Home: ts[0], End: ts.at(-1) }[e.key];
+    if (to) to.focus();
+    else if (["Enter", " ", "ArrowDown", "ArrowUp"].includes(e.key)) {
+      openMenu(t);
+      const its = itemsOf(t);
+      highlight(e.key === "ArrowUp" ? its.at(-1) : its[0], true);
+    } else return;
+    e.preventDefault();
+    return;
+  }
+  if (blinking) return e.preventDefault(), e.stopPropagation();
+  const its = itemsOf(openTitle), n = its.indexOf(hot);
+  const ts = titlesShown(), tn = ts.indexOf(openTitle);
+  switch (e.key) {
+    case "ArrowDown": highlight(its[(n + 1) % its.length], true); break;
+    case "ArrowUp": highlight(its[n < 1 ? its.length - 1 : n - 1], true); break;
+    case "Home": highlight(its[0], true); break;
+    case "End": highlight(its.at(-1), true); break;
+    case "ArrowRight": case "ArrowLeft": {
+      const t = ts[(tn + (e.key === "ArrowRight" ? 1 : ts.length - 1)) % ts.length];
+      openMenu(t);
+      highlight(itemsOf(t)[0], true);
+      break;
+    }
+    case "Enter": case " ": if (hot) choose(hot); else closeMenu(); break;
+    case "Escape": closeMenu(); break;   // focus in the menu goes back to its title
+    case "Tab": closeMenu(); return;
+    default: return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+}, true);
+menubar.append(menuList);
+
+// Links marked bar are also on the bar itself, one click away.
+const extras = el("div", { className: "extras" });
+for (const l of SITE.links.filter(l => l.bar)) extras.append(ext({ className: l.bar === "wide" ? "link wide" : "link", href: l.href, textContent: l.label }));
+menubar.append(extras);
 
 /* Light and dark */
 const systemDark = matchMedia("(prefers-color-scheme: dark)");
 const isDark = () => (document.documentElement.dataset.theme || (systemDark.matches ? "dark" : "light")) === "dark";
 // A circle, half filled: the left half is ink.
-const themeBtn = el("button", { type: "button", innerHTML: '<svg viewBox="0 0 13 13"><path d="M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2h-1zM0 4h1v5H0zM12 4h1v5h-1zM1 9h1v2H1zM11 9h1v2h-1zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM6 1h1v11H6zM4 1h2v11H4zM2 2h2v9H2zM1 4h1v5H1z" fill="currentColor"/></svg>' });
+const themeBtn = el("button", { type: "button", className: "theme", innerHTML: '<svg viewBox="0 0 13 13"><path d="M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2h-1zM0 4h1v5H0zM12 4h1v5h-1zM1 9h1v2H1zM11 9h1v2h-1zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM6 1h1v11H6zM4 1h2v11H4zM2 2h2v9H2zM1 4h1v5H1z" fill="currentColor"/></svg>' });
 const labelTheme = () => {
   const next = isDark() ? "Light mode" : "Dark mode";
   themeBtn.setAttribute("aria-label", next);
@@ -428,7 +656,7 @@ themeBtn.addEventListener("click", () => {
   try { localStorage.setItem("theme", next); } catch {}
   themeChanged();
 });
-menubar.append(el("li", { className: "theme" }, themeBtn));
+extras.append(themeBtn);
 labelTheme();
 
 /* Icon art. 1-bit icons are pure black and white, solid inside their outline so the desk never
@@ -623,6 +851,7 @@ function content(item) {
   }
   if (item.pictures) c.append(el("div", { className: "pictures" }, item.pictures.map(i => el("figure", {}, [el("img", { src: i.src, alt: i.alt }), el("figcaption", { textContent: i.alt })]))));
   if (item.scores) c.append(...scores(item.scores));
+  if (item.make) c.append(...item.make());
   if (item.info) c.append(el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })])));
   if (item.tweets && item.tweets.length) c.append(el("ul", { className: "tweets" }, item.tweets.map(t => el("li", {}, [el("span", { className: "date", textContent: t.date }), ext({ href: t.href, textContent: t.text })]))));
   if (item.links.length) c.append(el("div", { className: "buttons" }, item.links.map(l => {
@@ -665,7 +894,7 @@ function open(id, opener, entry) {
   w.entry = entry;
   w.body = body;
   w.opener = opener;
-  w.origin = icon ? icon.querySelector("canvas") : windows.get(item.parent).querySelector(".composite");   // zoom from here
+  w.origin = icon ? icon.querySelector("canvas") : item.parent ? windows.get(item.parent).querySelector(".composite") : item.origin();   // zoom from here
   w.setAttribute("role", "dialog");   // non-modal
   w.setAttribute("aria-labelledby", id + "-title");
   w.style.visibility = "hidden";
@@ -781,13 +1010,6 @@ addEventListener("popstate", () => {
   }
   name(frontmost());
 });
-// Every visit starts with the Read Me open; a window named in the URL opens on top of it.
-// A reload keeps its place in history and adds no entry.
-const start = location.hash.slice(1);
-if (history.state) here = history.state.n;
-else history.replaceState({ n: 0, id: "readme" }, "");
-open("readme", null, here);
-open(start, null, here || undefined);
 
 /* Desktop picture: a random picture, dithered to the desk's own pixels. Every one to three
    minutes, at random, another one slowly dissolves in. */
@@ -796,7 +1018,7 @@ const STEPS = 48;             // dissolve steps
 const STEP_MS = 100;          // ms per dissolve step
 const DEPTH = 0.5;    // darkest tone, as a share of pixels inked; keeps the picture behind the windows
 const picture = el("canvas", { className: "picture" });
-picture.setAttribute("aria-hidden", "true");   // the ? names it
+picture.setAttribute("aria-hidden", "true");   // About This Picture names it
 desk.prepend(picture);
 const pctx = picture.getContext("2d");
 const sources = new Map();
@@ -806,14 +1028,6 @@ const pick = (not) => { const n = Math.floor(Math.random() * (SITE.pictures.leng
 let shown = Math.floor(Math.random() * SITE.pictures.length);   // the picture on the desk, or dissolving in
 let onDesk = shown;                                             // the picture a dissolve starts from
 
-// The ? in the corner names the picture and opens its source page.
-const about = ext({ className: "about", textContent: "?" });
-desk.append(about);
-function label(p) {
-  about.href = p.page;
-  about.title = p.title;
-  about.setAttribute("aria-label", "About the desktop picture: " + p.title);
-}
 
 // The canvas has one pixel per dot, and CSS scales it up without smoothing. Each dot is a whole
 // number of screen pixels, K, so a display scaled by 1.25 or 1.5 shows even dots with no moiré.
@@ -843,7 +1057,7 @@ const ink = () => isDark() ? 0xffffffff : 0xff000000;
 const BAYER = [0,32,8,40,2,34,10,42,48,16,56,24,50,18,58,26,12,44,4,36,14,46,6,38,60,28,52,20,62,30,54,22,3,35,11,43,1,33,9,41,51,19,59,27,49,17,57,25,15,47,7,39,13,45,5,37,63,31,55,23,61,29,53,21].map(v => (v + 0.5) / 64);
 // The picture as 1-bit ink: a drawing with an ordered dither, a photo with Floyd-Steinberg.
 // p.marks says whether the dots draw the picture's dark or light parts.
-function dither(img, p) {
+function dither(img, p, W, H) {
   const [fx, fy] = p.position;
   const c = el("canvas", { width: W, height: H });
   const ctx = c.getContext("2d", { willReadFrequently: true });
@@ -880,16 +1094,18 @@ function paint(next, lo, hi) {
   const on = ink();
   for (let k = starts[lo]; k < starts[hi]; k++) { const i = order[k]; px32[i] = next[i] ? on : 0; }
   pctx.putImageData(frame, 0, 0);
+  if (copy?.live) copy.paint(lo, hi);
 }
 async function show(n, dissolve) {
   const g = ++gen;
   clearTimeout(timer);
   shown = n;
   const p = SITE.pictures[n];
-  label(p);
+  if (copy) copy.name(p);
   const img = await load(p);
   if (g !== gen) return;
-  const next = dither(img, p);
+  const next = dither(img, p, W, H);
+  if (copy?.live) copy.next = dither(img, p, copy.w, copy.h);
   if (dissolve) {
     for (let k = 1; k <= STEPS; k++) {
       await new Promise(r => setTimeout(r, STEP_MS));
@@ -919,8 +1135,112 @@ function themeChanged() {
   const on = ink();
   for (let i = 0; i < px32.length; i++) if (px32[i]) px32[i] = on;
   pctx.putImageData(frame, 0, 0);
+  if (copy?.live) copy.recolor();
 }
 systemDark.addEventListener("change", themeChanged);
+const nextPicture = () => show(pick(shown), !still);
+
+/* About This Picture: a window with a copy of the desk picture, its title, its source page, and
+   a button for the next one. The copy has the desk's shape and dots, and dissolves with it. */
+let copy = null;   // the open window's copy, or null
+byId.set("picture", { id: "picture", name: "About This Picture", links: [],
+  origin: () => titles.at(-1),   // it zooms out of the Desktop menu's title
+  make() {
+    const canvas = el("canvas", { className: "copy" });
+    canvas.setAttribute("aria-hidden", "true");
+    const caption = el("p");
+    const source = ext({ className: "btn", textContent: "Source" });
+    const next = el("button", { type: "button", className: "btn", textContent: "Next Picture" });
+    next.addEventListener("click", nextPicture);
+    const ctx = canvas.getContext("2d");
+    const c = copy = { canvas, w: 0, h: 0,
+      // Sized and still in the open window, not one closed or closing.
+      get live() { return c.w > 0 && windows.get("picture")?.contains(canvas); },
+      name(p) { caption.textContent = p.title; source.href = p.page; source.setAttribute("aria-label", "Source of " + p.title + ", on Wikimedia Commons"); },
+      // Dots ranked from lo up to hi take the picture in next.
+      paint(lo, hi) {
+        const on = ink();
+        for (let i = 0; i < c.rank.length; i++) if (c.rank[i] >= lo && c.rank[i] < hi) c.px32[i] = c.next[i] ? on : 0;
+        ctx.putImageData(c.frame, 0, 0);
+      },
+      recolor() {
+        const on = ink();
+        for (let i = 0; i < c.px32.length; i++) if (c.px32[i]) c.px32[i] = on;
+        ctx.putImageData(c.frame, 0, 0);
+      },
+    };
+    c.name(SITE.pictures[shown]);
+    // As wide as the window allows and at most 55% of the screen's height, in whole desk dots.
+    const fit = () => {
+      if (copy !== c || !canvas.isConnected) return ro.disconnect();
+      const dpr = devicePixelRatio, k = Math.max(1, Math.round(dpr));
+      const aspect = desk.clientWidth / desk.clientHeight;
+      const css = Math.min(canvas.parentNode.clientWidth - 42, innerHeight * 0.55 * aspect);
+      const w = Math.floor(css * dpr / k), h = Math.round(w / aspect);
+      if (w === c.w && h === c.h) return;
+      Object.assign(c, { w, h });
+      canvas.width = w;
+      canvas.height = h;
+      canvas.style.width = w * k / dpr + "px";
+      canvas.style.height = h * k / dpr + "px";
+      c.frame = ctx.createImageData(w, h);
+      c.px32 = new Uint32Array(c.frame.data.buffer);
+      c.rank = new Uint8Array(w * h);
+      for (let i = 0; i < c.rank.length; i += 65536) crypto.getRandomValues(c.rank.subarray(i, i + 65536));
+      const n = shown, p = SITE.pictures[n];
+      load(p).then(img => { if (copy === c && shown === n) { c.next = dither(img, p, w, h); c.paint(0, 256); } });
+    };
+    // The window's width follows the screen's, and so does the desk's.
+    const ro = new ResizeObserver(fit);
+    ro.observe(desk);
+    return [canvas, caption, el("div", { className: "buttons" }, [source, next])];
+  },
+});
+
+/* Finder keys on the desk. When no window has focus, typing selects the first icon whose name
+   comes at or after what was typed, the arrows move the selection, and Return opens it. */
+let typed = "", typedAt = 0;
+const iconName = b => b.querySelector(".label").textContent.toLowerCase();
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || openTitle || document.activeElement.closest(".window, .menubar")) return;
+  const sel = [...icons.values()].find(b => b.classList.contains("selected"));
+  let to;
+  if (e.key.length === 1 && e.key !== " ") {
+    typed = (e.timeStamp - typedAt < 1000 ? typed : "") + e.key.toLowerCase();
+    typedAt = e.timeStamp;
+    const byName = [...icons.values()].sort((a, b) => iconName(a) < iconName(b) ? -1 : 1);
+    to = byName.find(b => iconName(b) >= typed) || byName.at(-1);
+  } else if (e.key.startsWith("Arrow")) {
+    to = sel ? nearest(sel, e.key) || sel : icons.get("readme");
+  } else if (e.key === "Enter" && sel && document.activeElement === document.body) {
+    e.preventDefault();
+    return open(sel.dataset.id, sel);
+  } else return;
+  e.preventDefault();
+  select(to.dataset.id);
+  to.focus();
+});
+// The nearest icon in an arrow's direction, counting sideways distance double.
+function nearest(from, key) {
+  const [dx, dy] = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[key];
+  const centre = b => { const r = b.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  const [fx, fy] = centre(from);
+  let best = null, score = Infinity;
+  for (const b of icons.values()) {
+    const [x, y] = centre(b);
+    const along = (x - fx) * dx + (y - fy) * dy, across = Math.abs(dx ? y - fy : x - fx);
+    if (along > 1 && along + 2 * across < score) { best = b; score = along + 2 * across; }
+  }
+  return best;
+}
+
+// Every visit starts with the Read Me open; a window named in the URL opens on top of it.
+// A reload keeps its place in history and adds no entry.
+const start = location.hash.slice(1);
+if (history.state) here = history.state.n;
+else history.replaceState({ n: 0, id: "readme" }, "");
+open("readme", null, here);
+open(start, null, here || undefined);
 </script>
 </body>
 </html>

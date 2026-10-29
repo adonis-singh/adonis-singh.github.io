@@ -18,14 +18,20 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="media/icons/favicon.png">
 <link rel="apple-touch-icon" href="media/icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/ArkPixel16-Prop-Latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ArkPixel12-Smear.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ArkPixel12-Prop-Latin.woff2" as="font" type="font/woff2" crossorigin>
 <script>
 // A theme picked with the menu bar toggle wins over the system's; otherwise the system decides.
 try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
 </script>
 <style>
+/* Ark Pixel (OFL, fonts/ArkPixel-OFL.txt), Latin subsets. Each face is drawn on a pixel grid and
+   stays crisp only at its own size: Ark Pixel 16 at 16px, Ark Pixel 12 and its smeared bold at 12px.
+   Line heights stay even, so the glyphs sit on whole pixels. */
+@font-face { font-family: "Ark Pixel 16"; src: url("fonts/ArkPixel16-Prop-Latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Ark Pixel 12 Bold"; src: url("fonts/ArkPixel12-Smear.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Ark Pixel 12"; src: url("fonts/ArkPixel12-Prop-Latin.woff2") format("woff2"); font-display: block; }
 :root {
   --ink: #000;
   --win: #fff;
@@ -52,14 +58,15 @@ body {
   overflow: hidden;
   background: var(--win);
   color: var(--ink);
-  font-family: "DotGothic16", monospace;
+  font-family: "Ark Pixel 16", monospace;
   font-size: 16px;
-  line-height: 1.75;
+  line-height: 24px;
+  word-spacing: -2px;
   -webkit-font-smoothing: none;
   -webkit-tap-highlight-color: transparent;
 }
 ::selection { background: var(--ink); color: var(--win); }
-button { font: inherit; color: inherit; }
+button { font: inherit; color: inherit; word-spacing: inherit; }
 a { color: inherit; }
 :focus-visible { outline: 1px dotted var(--ink); outline-offset: 2px; }
 
@@ -75,16 +82,17 @@ a { color: inherit; }
   list-style: none;
   background: var(--win);
   border-bottom: 1px solid var(--ink);
+  font-family: "Ark Pixel 12 Bold", monospace;
+  font-size: 12px;
 }
 .menubar a {
   display: block;
   height: calc(var(--bar) - 1px);
   padding: 0 10px;
-  line-height: calc(var(--bar) - 1px);
+  line-height: calc(var(--bar) - 2px);
   text-decoration: none;
   white-space: nowrap;
 }
-.menubar .me { -webkit-text-stroke: 0.5px currentColor; }
 .menubar .theme { margin-left: auto; }
 .menubar button {
   display: grid;
@@ -164,8 +172,9 @@ a { color: inherit; }
   margin-top: 4px;
   padding: 0 4px;
   background: var(--win);
-  font-size: 14px;
-  line-height: 18px;
+  font-family: "Ark Pixel 12", monospace;
+  font-size: 12px;
+  line-height: 16px;
   text-align: center;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -195,8 +204,9 @@ a { color: inherit; }
   height: 22px;
   padding: 4px 3px;
   border-bottom: 1px solid var(--ink);
-  font-size: 16px;
-  line-height: 13px;
+  font-family: "Ark Pixel 12 Bold", monospace;
+  font-size: 12px;
+  line-height: 12px;
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -273,6 +283,9 @@ a { color: inherit; }
   border-radius: 7px;
   box-shadow: 0 0 0 1px var(--ink) inset;
   background: var(--win);
+  font-family: "Ark Pixel 12 Bold", monospace;
+  font-size: 12px;
+  line-height: 20px;
   text-align: center;
   text-decoration: none;
 }
@@ -353,7 +366,6 @@ a { color: inherit; }
   .scores .bar { grid-column: 1 / -1; grid-row: 2; }
 }
 @media (max-width: 360px) {
-  .menubar { font-size: 15px; }
   .menubar a { padding: 0 5px; }
   .menubar button { width: 28px; }
 }
@@ -399,6 +411,16 @@ const el = (tag, props = {}, kids = []) => {
   for (const k of [].concat(kids)) n.append(k);
   return n;
 };
+// Pixel fonts blur on half pixels. Centred text lands on one when the box and the text differ
+// in width by an odd number of pixels; one more pixel of padding moves it onto a whole one.
+const snap = (n) => {
+  n.style.paddingRight = "";
+  const x = n.getBoundingClientRect().x - n.parentElement.getBoundingClientRect().x;
+  if (x % 1) n.style.paddingRight = `${parseFloat(getComputedStyle(n).paddingRight) + 1}px`;
+};
+const SNAP = ".icon .label, .titlebar h2, .btn span";
+Promise.all([...document.fonts].map(f => f.load())).then(() => document.querySelectorAll(SNAP).forEach(snap));
+addEventListener("resize", () => document.querySelectorAll(".titlebar h2").forEach(snap));
 
 /* Menu bar */
 const menubar = document.getElementById("menubar");
@@ -626,7 +648,8 @@ function content(item) {
   if (item.info) c.append(el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })])));
   if (item.tweets && item.tweets.length) c.append(el("ul", { className: "tweets" }, item.tweets.map(t => el("li", {}, [el("span", { className: "date", textContent: t.date }), ext({ href: t.href, textContent: t.text })]))));
   if (item.links.length) c.append(el("div", { className: "buttons" }, item.links.map(l => {
-    const a = el("a", { className: "btn", href: l.href, textContent: l.label, ...(l.href.startsWith("mailto:") ? {} : { target: "_blank", rel: "noopener" }) });
+    const a = el("a", { className: "btn", href: l.href, ...(l.href.startsWith("mailto:") ? {} : { target: "_blank", rel: "noopener" }) });
+    a.append(el("span", { textContent: l.label }));
     if (l.glyph) a.insertAdjacentHTML("afterbegin", glyphs[l.glyph]);
     return a;
   })));
@@ -677,6 +700,7 @@ function open(id, opener, entry) {
   cascade = (cascade + 1) % 8;
   front(w);
 
+  w.querySelectorAll(SNAP).forEach(snap);
   zoom(w.origin.getBoundingClientRect(), w.getBoundingClientRect(), () => {
     w.style.visibility = "";
     if (w.classList.contains("front")) w.body.focus();

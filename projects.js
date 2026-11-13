@@ -146,6 +146,37 @@ window.PROJECTS = [
     ],
   },
   {
+    id: "mcbench-lite",
+    name: "mcbench-lite",
+    year: 2026,
+    blurb: "Chat with an AI model that builds in Minecraft, on your own machine.",
+    body: [
+      "A web app you run on your own machine. You chat with an AI model and it builds in a Minecraft world, shown in 3D beside the chat. Bench mode gives one prompt to several models at once, so you can compare their builds and vote without knowing which model made which.",
+      "In MC-Bench a model wrote one program in a single response. Here the model works as an agent: it runs build programs, takes screenshots of its build, tests the redstone, and keeps going until it decides the build is done.",
+      "A build can be shared as a page where anyone can fly around it. Two of them: [Oppenheimer watching the first atomic blast](https://adonis-singh.github.io/mcbench-builds/b/600bde0d9751/) by Claude Fable 5.2, and [a giant rubber duck](https://adonis-singh.github.io/mcbench-builds/b/d36f4e2d933e/) by Claude Opus 5.5.",
+    ],
+    icon: "media/icons/mcbench-lite.png",
+    info: [
+      ["Language", "JavaScript, with a Minecraft engine in Rust"],
+      ["Minecraft", "1.21.10"],
+      ["Runs on", "macOS and Linux"],
+      ["Made with", "Mostly Claude Opus 5.5"],
+      ["Started", "February 2026"],
+      ["Released", "November 12, 2026"],
+    ],
+    tweets: [
+      { date: "Mar 23, 2026", text: "An early demo", href: "https://x.com/adonis_singh/status/2036117129250930892" },
+      { date: "Nov 11, 2026", text: "Shared builds play in 3D on X", href: "https://x.com/adonis_singh/status/2120499485793288619" },
+    ],
+    // The app picture is docs/screenshot.jpg from the repo; the builds are the preview.jpg of their shared pages.
+    images: [
+      { src: "media/mcbench-lite-app.jpg", thumb: "media/mcbench-lite-app-thumb.jpg", alt: "The app: the chat, and the model's build beside it" },
+      { src: "media/mcbench-lite-trinity.jpg", thumb: "media/mcbench-lite-trinity-thumb.jpg", alt: "Oppenheimer watching the first atomic blast, by Claude Fable 5.2" },
+      { src: "media/mcbench-lite-duck.jpg", thumb: "media/mcbench-lite-duck-thumb.jpg", alt: "A giant rubber duck, by Claude Opus 5.5" },
+    ],
+    links: [{ label: "Code", href: "https://github.com/adonis-singh/mcbench-lite" }],
+  },
+  {
     id: "eyebench",
     name: "EyeBench",
     year: 2026,

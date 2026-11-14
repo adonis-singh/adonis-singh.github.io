@@ -118,7 +118,6 @@ window.SITE = {
   links: [
     { label: "GitHub", glyph: "github", href: "https://github.com/adonis-singh", bar: true, button: true },
     { label: "X", menu: "@adonis_singh on X", href: "https://x.com/adonis_singh", bar: true },
-    { label: "Buy me a coffee", href: "https://buymeacoffee.com/adonis_singh" },
   ],
 };
 

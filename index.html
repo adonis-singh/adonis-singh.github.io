@@ -548,14 +548,14 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=491413bc59"></script>
+<script src="projects.js?v=9280f88f05"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const phone = matchMedia("(max-width: 600px), (max-height: 500px)");
 
-const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: SITE.contact, icon: "media/icons/readme.png" };
+const readme = { id: "readme", name: "Read Me", body: SITE.intro, index: PROJECTS, links: [...SITE.contact, ...SITE.links.filter(l => l.button)], icon: "media/icons/readme.png" };
 const items = [readme, ...PROJECTS];
 const byId = new Map(items.map(p => [p.id, p]));
 // A project's images open in a window of their own, which belongs to the project's window.
@@ -587,6 +587,7 @@ const attrs = (n, a) => { for (const k in a) n.setAttribute(k, a[k]); return n; 
 const glyphs = {
   mail: '<svg width="13" height="9" viewBox="0 0 13 9"><path d="M0 0h13v1H0zM0 1h3v1H0zM10 1h3v1H10zM0 2h2v6H0zM3 2h1v1H3zM9 2h1v1H9zM11 2h2v6H11zM4 3h1v1H4zM8 3h1v1H8zM5 4h1v1H5zM7 4h1v1H7zM6 5h1v1H6zM0 8h13v1H0z"/></svg>',
   x: '<svg width="10" height="9" viewBox="0 0 10 9"><path d="M0 0h2v1H0zM8 0h1v1H8zM1 1h2v1H1zM7 1h1v1H7zM2 2h2v1H2zM6 2h1v1H6zM3 3h3v1H3zM4 4h2v1H4zM3 5h1v1H3zM5 5h2v1H5zM2 6h1v1H2zM6 6h2v1H6zM1 7h1v1H1zM7 7h2v1H7zM0 8h1v1H0zM8 8h2v1H8z"/></svg>',
+  github: '<svg width="11" height="9" viewBox="0 0 11 9"><path d="M1 0h1v1H1zM9 0h1v1H9zM1 1h2v1H1zM8 1h2v1H8zM1 2h9v1H1zM0 3h11v1H0zM0 4h2v1H0zM4 4h3v1H4zM9 4h2v1H9zM0 5h2v1H0zM4 5h3v1H4zM9 5h2v1H9zM0 6h11v1H0zM1 7h9v1H1zM2 8h7v1H2z"/></svg>',
 };
 
 /* Menu bar. A mouse works it like the Mac's: press a title and the menu drops, drag to an item

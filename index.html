@@ -548,7 +548,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=2ed90134c5"></script>
+<script src="projects.js?v=491413bc59"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -1584,7 +1584,7 @@ function printSheet() {
   const rows = (pairs) => el("dl", {}, pairs.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", {}, v)]));
   const sheet = el("article", { className: "print" }, [
     el("h1", { textContent: SITE.name }),
-    ...SITE.intro.map(t => el("p", { textContent: t })),
+    ...SITE.intro.map(t => el("p", { textContent: t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)") })),   // a link prints as text (url), as in a project's paragraphs
     rows([
       ["Website", url(document.querySelector('link[rel="canonical"]').href)],
       ...SITE.contact.filter(l => l.href.startsWith("mailto:")).map(l => [l.label, url(l.href)]),

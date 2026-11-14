@@ -33,7 +33,7 @@ window.SITE = {
   name: "Adi Singh",
   intro: [
     "I'm Adi Singh, a student. I build benchmarks for AI models, and I decompile and port games.",
-    "I used to work at LM Studio.",
+    "Previously [@lmstudio](https://x.com/lmstudio)",
   ],
   // Desktop pictures. One is picked at random, and every few minutes another dissolves in.
   // id names the picture for next.

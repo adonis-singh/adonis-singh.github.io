@@ -539,6 +539,10 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 @media (pointer: coarse) and (max-height: 500px) {
   .menu a { line-height: 40px; }
 }
+/* With Email the bar is 388px wide at a phone's sizes, so a narrower phone leaves it to the Read Me and the Adi Singh menu. */
+@media (max-width: 389px) {
+  .menubar .link[href^="mailto:"] { display: none; }
+}
 </style>
 </head>
 <body>
@@ -548,7 +552,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=9280f88f05"></script>
+<script src="projects.js?v=dd37a9f28c"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -786,10 +790,13 @@ addEventListener("keydown", e => {
 }, true);
 menubar.append(menuList);
 
-// Links marked bar are also on the bar itself, one click away.
+// Contacts and links marked bar are also on the bar itself, one click away. Mail opens in place, not in a new tab.
 const extras = el("div", { className: "extras" });
 extras.addEventListener("pointerdown", closeMenu);   // the menu's shield is under the bar, so it can't take these presses
-for (const l of SITE.links.filter(l => l.bar)) extras.append(ext({ className: "link", href: l.href }, el("span", { textContent: l.label })));
+for (const l of [...SITE.contact, ...SITE.links].filter(l => l.bar)) {
+  const props = { className: "link", href: l.href };
+  extras.append(l.href.startsWith("mailto:") ? el("a", props, el("span", { textContent: l.label })) : ext(props, el("span", { textContent: l.label })));
+}
 menubar.append(extras);
 
 /* Light and dark */

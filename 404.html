@@ -101,6 +101,8 @@ a { color: inherit; cursor: inherit; }
 .extras { display: flex; margin-left: auto; }
 .theme { display: grid; place-items: center; width: 36px; height: calc(var(--bar) - 1px); padding: 0; border: 0; background: none; }
 .theme svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
+.menubar .mark { display: grid; place-items: center; width: 36px; padding: 0; }
+.mark svg { display: block; fill: currentColor; shape-rendering: crispEdges; }
 .menubar a:active, .menubar a:focus-visible, .theme:active, .theme:focus-visible { background: var(--ink); color: var(--win); }
 
 /* The desk, in the 50% pattern. The alert sits a quarter of the way down, on whole pixels so its lines stay sharp. */
@@ -154,7 +156,7 @@ a { color: inherit; cursor: inherit; }
 }
 @media (max-width: 360px) {
   .menubar a { padding: 0 6px; }
-  .theme { width: 32px; }
+  .theme, .menubar .mark { width: 32px; }
   .alert > div { gap: 0 12px; padding: 12px; }
 }
 /* Fingers need bigger targets than a mouse. */
@@ -270,11 +272,20 @@ const inBomb = (x, y) => at(x, y) !== undefined && at(x, y) !== "*" && !outside.
 const mask = grid((x, y) => [-1, 0, 1].some(dx => [-1, 0, 1].some(dy => inBomb(x + dx, y + dy))));
 document.getElementById("bomb").innerHTML = `<path fill="#fff" d="${runs(mask)}"/><path fill="#000" d="${runs(grid((x, y) => at(x, y) === "#"))}"/><path fill="currentColor" d="${runs(grid((x, y) => at(x, y) === "*"))}"/>`;
 
-/* Menu bar, like the home page's: the name goes home, and the links marked bar sit at the right. */
+/* Menu bar, like the home page's: the name goes home, and the links marked bar sit at the right,
+   by name or as a logo the bar's height. */
 const menubar = document.getElementById("menubar");
 menubar.append(el("a", { className: "me", href: "/" }, el("span", { textContent: SITE.name })));
+const barGlyphs = {
+  x: '<svg width="14" height="13" viewBox="0 0 14 13"><path d="M0 0h5v1H0zM12 0h2v1H12zM1 1h2v1H1zM4 1h2v1H4zM11 1h2v1H11zM2 2h2v1H2zM5 2h2v1H5zM10 2h2v1H10zM3 3h2v1H3zM6 3h2v1H6zM9 3h2v1H9zM3 4h2v1H3zM6 4h4v1H6zM4 5h2v1H4zM7 5h2v1H7zM5 6h2v1H5zM8 6h2v1H8zM6 7h2v1H6zM9 7h2v1H9zM4 8h4v1H4zM9 8h2v1H9zM3 9h2v1H3zM7 9h2v1H7zM10 9h2v1H10zM2 10h2v1H2zM8 10h2v1H8zM11 10h2v1H11zM1 11h2v1H1zM9 11h2v1H9zM12 11h2v1H12zM0 12h2v1H0zM9 12h5v1H9z"/></svg>',
+};
 const extras = el("div", { className: "extras" });
-for (const l of SITE.links.filter(l => l.bar)) extras.append(el("a", { href: l.href, target: "_blank", rel: "noopener" }, el("span", { textContent: l.label })));
+for (const l of SITE.links.filter(l => l.bar)) {
+  const a = el("a", { href: l.href, target: "_blank", rel: "noopener" });
+  if (l.barGlyph) Object.assign(a, { className: "mark", innerHTML: barGlyphs[l.barGlyph], title: l.menu || l.label }).setAttribute("aria-label", l.menu || l.label);
+  else a.append(el("span", { textContent: l.label }));
+  extras.append(a);
+}
 const systemDark = matchMedia("(prefers-color-scheme: dark)");
 const isDark = () => (document.documentElement.dataset.theme || (systemDark.matches ? "dark" : "light")) === "dark";
 const themeBtn = el("button", { type: "button", className: "theme", innerHTML: '<svg viewBox="0 0 13 13"><path d="M4 0h5v1H4zM2 1h2v1H2zM9 1h2v1H9zM1 2h1v2H1zM11 2h1v2h-1zM0 4h1v5H0zM12 4h1v5h-1zM1 9h1v2H1zM11 9h1v2h-1zM2 11h2v1H2zM9 11h2v1H9zM4 12h5v1H4zM6 1h1v11H6zM4 1h2v11H4zM2 2h2v9H2zM1 4h1v5H1z" fill="currentColor"/></svg>' });
@@ -290,7 +301,7 @@ themeBtn.addEventListener("click", () => {
   labelTheme();
 });
 systemDark.addEventListener("change", labelTheme);
-extras.lastChild.before(themeBtn);   // between the links, so the X in the corner doesn't read as a close box
+extras.append(themeBtn);   // last, after the links
 menubar.append(extras);
 labelTheme();
 

@@ -107,17 +107,17 @@ window.SITE = {
   ],
   // Buttons at the bottom of the Read Me, and items in the Adi Singh menu. glyph is an icon drawn
   // before the label: "mail", "x" or "github". menu is the item's name in the menu, when it differs from label.
-  // bar: true puts the contact on the menu bar too, at the right, before the links there.
   contact: [
-    { label: "Email", glyph: "mail", href: "mailto:getaditya2008@gmail.com", bar: true },
+    { label: "Email", glyph: "mail", href: "mailto:getaditya2008@gmail.com" },
     { label: "DM me", menu: "DM me on X", glyph: "x", href: "https://x.com/messages/compose?recipient_id=1591379820658696192" },
   ],
-  // Items at the end of the Adi Singh menu. bar: true puts the link on the menu bar too, at the right,
-  // named label. button: true puts it among the Read Me's buttons too, after the contact buttons, with its glyph.
+  // Items at the end of the Adi Singh menu. bar: true puts the link on the menu bar too, at the right, in
+  // this order, named label; barGlyph draws it there as that logo instead: "x". button: true puts it among
+  // the Read Me's buttons too, after the contact buttons, with its glyph.
   // menu is the item's name in the menu, when it differs from label.
   links: [
+    { label: "X", menu: "@adonis_singh on X", href: "https://x.com/adonis_singh", bar: true, barGlyph: "x" },
     { label: "GitHub", glyph: "github", href: "https://github.com/adonis-singh", bar: true, button: true },
-    { label: "X", menu: "@adonis_singh on X", href: "https://x.com/adonis_singh", bar: true },
   ],
 };
 

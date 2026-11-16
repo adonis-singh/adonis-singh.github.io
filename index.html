@@ -152,6 +152,9 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 }
 .theme svg { display: block; width: 13px; height: 13px; shape-rendering: crispEdges; }
 .theme:active, .theme:focus-visible { background: var(--ink); color: var(--win); }
+/* A bar link drawn as a logo, in a box as wide as the theme toggle's. */
+.menubar .mark { display: grid; place-items: center; width: 36px; padding: 0; }
+.mark svg { display: block; fill: currentColor; shape-rendering: crispEdges; }
 /* A menu hangs from its title, its top edge on the bar's bottom line. Items invert while the
    pointer or the keys are on them. A separator is a row of the 50% pattern. */
 .menu {
@@ -494,7 +497,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 }
 @media (max-width: 360px) {
   .title, .menubar .link { padding-inline: 6px; }
-  .theme { width: 32px; }
+  .theme, .menubar .mark { width: 32px; }
 }
 /* Fingers need bigger targets than a mouse. */
 @media (pointer: coarse) {
@@ -539,10 +542,6 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 @media (pointer: coarse) and (max-height: 500px) {
   .menu a { line-height: 40px; }
 }
-/* With Email the bar is 388px wide at a phone's sizes, so a narrower phone leaves it to the Read Me and the Adi Singh menu. */
-@media (max-width: 389px) {
-  .menubar .link[href^="mailto:"] { display: none; }
-}
 </style>
 </head>
 <body>
@@ -552,7 +551,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=2505a478d6"></script>
+<script src="projects.js?v=e246f28084"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -590,7 +589,7 @@ const attrs = (n, a) => { for (const k in a) n.setAttribute(k, a[k]); return n; 
 // Button glyphs, drawn in pixels as tall as the button font's capitals.
 const glyphs = {
   mail: '<svg width="13" height="9" viewBox="0 0 13 9"><path d="M0 0h13v1H0zM0 1h3v1H0zM10 1h3v1H10zM0 2h2v6H0zM3 2h1v1H3zM9 2h1v1H9zM11 2h2v6H11zM4 3h1v1H4zM8 3h1v1H8zM5 4h1v1H5zM7 4h1v1H7zM6 5h1v1H6zM0 8h13v1H0z"/></svg>',
-  x: '<svg width="10" height="9" viewBox="0 0 10 9"><path d="M0 0h2v1H0zM8 0h1v1H8zM1 1h2v1H1zM7 1h1v1H7zM2 2h2v1H2zM6 2h1v1H6zM3 3h3v1H3zM4 4h2v1H4zM3 5h1v1H3zM5 5h2v1H5zM2 6h1v1H2zM6 6h2v1H6zM1 7h1v1H1zM7 7h2v1H7zM0 8h1v1H0zM8 8h2v1H8z"/></svg>',
+  x: '<svg width="10" height="9" viewBox="0 0 10 9"><path d="M0 0h4v1H0zM8 0h2v1H8zM1 1h2v1H1zM4 1h1v1H4zM7 1h2v1H7zM1 2h2v1H1zM4 2h1v1H4zM6 2h2v1H6zM2 3h2v1H2zM5 3h2v1H5zM3 4h2v1H3zM6 4h1v1H6zM3 5h2v1H3zM6 5h1v1H6zM2 6h4v1H2zM7 6h1v1H7zM1 7h2v1H1zM5 7h2v1H5zM8 7h1v1H8zM0 8h2v1H0zM6 8h4v1H6z"/></svg>',   // X's logo: a hollow stroke crossed by a thin one
   github: '<svg width="11" height="9" viewBox="0 0 11 9"><path d="M1 0h1v1H1zM9 0h1v1H9zM1 1h2v1H1zM8 1h2v1H8zM1 2h9v1H1zM0 3h11v1H0zM0 4h2v1H0zM4 4h3v1H4zM9 4h2v1H9zM0 5h2v1H0zM4 5h3v1H4zM9 5h2v1H9zM0 6h11v1H0zM1 7h9v1H1zM2 8h7v1H2z"/></svg>',
 };
 
@@ -790,12 +789,17 @@ addEventListener("keydown", e => {
 }, true);
 menubar.append(menuList);
 
-// Contacts and links marked bar are also on the bar itself, one click away. Mail opens in place, not in a new tab.
+// Links marked bar are also on the bar itself, one click away, by name or as a logo the bar's height.
+const barGlyphs = {
+  x: '<svg width="14" height="13" viewBox="0 0 14 13"><path d="M0 0h5v1H0zM12 0h2v1H12zM1 1h2v1H1zM4 1h2v1H4zM11 1h2v1H11zM2 2h2v1H2zM5 2h2v1H5zM10 2h2v1H10zM3 3h2v1H3zM6 3h2v1H6zM9 3h2v1H9zM3 4h2v1H3zM6 4h4v1H6zM4 5h2v1H4zM7 5h2v1H7zM5 6h2v1H5zM8 6h2v1H8zM6 7h2v1H6zM9 7h2v1H9zM4 8h4v1H4zM9 8h2v1H9zM3 9h2v1H3zM7 9h2v1H7zM10 9h2v1H10zM2 10h2v1H2zM8 10h2v1H8zM11 10h2v1H11zM1 11h2v1H1zM9 11h2v1H9zM12 11h2v1H12zM0 12h2v1H0zM9 12h5v1H9z"/></svg>',
+};
 const extras = el("div", { className: "extras" });
 extras.addEventListener("pointerdown", closeMenu);   // the menu's shield is under the bar, so it can't take these presses
-for (const l of [...SITE.contact, ...SITE.links].filter(l => l.bar)) {
-  const props = { className: "link", href: l.href };
-  extras.append(l.href.startsWith("mailto:") ? el("a", props, el("span", { textContent: l.label })) : ext(props, el("span", { textContent: l.label })));
+for (const l of SITE.links.filter(l => l.bar)) {
+  if (!l.barGlyph) { extras.append(ext({ className: "link", href: l.href }, el("span", { textContent: l.label }))); continue; }
+  const a = attrs(ext({ className: "link mark", href: l.href, innerHTML: barGlyphs[l.barGlyph] }), { "aria-label": l.menu || l.label });
+  a.title = l.menu || l.label;
+  extras.append(a);
 }
 menubar.append(extras);
 
@@ -815,8 +819,7 @@ themeBtn.addEventListener("click", () => {
   try { localStorage.setItem("theme", next); } catch {}
   themeChanged();
 });
-// Between the links, so the X in the corner doesn't read as a close box.
-extras.lastChild.before(themeBtn);
+extras.append(themeBtn);   // last, after the links
 labelTheme();
 
 /* Icon art: 32x32, 1-bit, in black on white, with the same name plus -selected and -open for the

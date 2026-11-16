@@ -32,7 +32,7 @@
 window.SITE = {
   name: "Adi Singh",
   intro: [
-    "I'm Adi Singh, a student. I build benchmarks for AI models, and I decompile and port games.",
+    "I'm Adi Singh, a student. I like doing cool things with AI and sharing them.",
     "Previously [@lmstudio](https://x.com/lmstudio)",
   ],
   // Desktop pictures. One is picked at random, and every few minutes another dissolves in.
@@ -121,31 +121,8 @@ window.SITE = {
   ],
 };
 
+// Newest first: the Read Me, the desk, the Projects menu and the printed page list them in this order.
 window.PROJECTS = [
-  {
-    id: "mcbench",
-    name: "MC-Bench",
-    year: 2025,
-    blurb: "AI models built in Minecraft, and people voted on the builds.",
-    body: [
-      "A website where people judged Minecraft builds made by AI models. Two models got the same prompt and wrote code to build it. You voted for the better build, then saw which model made which. The votes made a leaderboard.",
-      "It started from a conversation with [Aidan McLau](https://x.com/aidan_mclau), who helped bring the team together. A group of volunteers built it. It's offline now, but the code is still up.",
-    ],
-    icon: "media/icons/mcbench.png",
-    info: [
-      ["Started", "October 2024"],
-      ["Site", "mcbench.ai, offline"],
-    ],
-    tweets: [
-      { date: "Oct 25, 2024", text: "The announcement", href: "https://x.com/adonis_singh/status/1849697262953259452" },
-      { date: "Mar 1, 2025", text: "Public voting in 10 days, and the team", href: "https://x.com/adonis_singh/status/1895908048407056889" },
-      { date: "Mar 15, 2025", text: "Voting goes live", href: "https://x.com/adonis_singh/status/1900998737675116842" },
-    ],
-    links: [
-      { label: "Code", href: "https://github.com/mc-bench" },
-      { label: "TechCrunch article", href: "https://techcrunch.com/2025/03/20/a-high-schooler-built-a-website-that-lets-you-challenge-ai-models-to-a-minecraft-build-off" },
-    ],
-  },
   {
     id: "mcbench-lite",
     name: "mcbench-lite",
@@ -176,35 +153,6 @@ window.PROJECTS = [
       { src: "media/mcbench-lite-duck.jpg", thumb: "media/mcbench-lite-duck-thumb.jpg", alt: "A giant rubber duck, by Claude Opus 5.5" },
     ],
     links: [{ label: "Code", href: "https://github.com/adonis-singh/mcbench-lite" }],
-  },
-  {
-    id: "eyebench",
-    name: "EyeBench",
-    year: 2026,
-    blurb: "A visual reasoning benchmark for AI models.",
-    body: [
-      "A visual reasoning benchmark for AI models. It has 100 generated images, 20 for each of five tasks: spot the differences between two panels, count the loops in a tangle of curves, count the separate pieces of a graph, count the turns on a maze path, and pick the tile that completes a 4×4 pattern. Every answer is one number, and it's either right or wrong.",
-    ],
-    icon: "media/icons/eyebench.png",
-    info: [
-      ["Started", "September 2025"],
-      ["Version", "V3, since March 2026"],
-      ["Code", "Private"],
-    ],
-    tweets: [
-      { date: "Feb 27, 2026", text: "EyeBench V2 and its first leaderboard", href: "https://x.com/adonis_singh/status/2027465990024438169" },
-      { date: "Mar 10, 2026", text: "EyeBench V3", href: "https://x.com/adonis_singh/status/2031516743110214015" },
-      { date: "Oct 8, 2026", text: "What EyeBench is", href: "https://x.com/adonis_singh/status/2108283869401084201" },
-    ],
-    images: [
-      { src: "media/eyebench-spot-diff-10.jpg", thumb: "media/eyebench-spot-diff-10-thumb.jpg", alt: "Spot the differences" },
-      { src: "media/eyebench-topology-21.jpg", thumb: "media/eyebench-topology-21-thumb.jpg", alt: "Count the loops" },
-      { src: "media/eyebench-graph-41.jpg", thumb: "media/eyebench-graph-41-thumb.jpg", alt: "Count the pieces of a graph" },
-      { src: "media/eyebench-pattern-61.jpg", thumb: "media/eyebench-pattern-61-thumb.jpg", alt: "Complete the pattern" },
-      { src: "media/eyebench-maze-100.jpg", thumb: "media/eyebench-maze-100-thumb.jpg", alt: "Count the turns in a maze" },
-    ],
-    scores: { page: "https://adonis-singh.github.io/eyebench/", source: "https://adonis-singh.github.io/eyebench/data-frontier.js", top: 10 },
-    links: [],
   },
   {
     id: "trevorswing",
@@ -293,5 +241,58 @@ window.PROJECTS = [
       caption: "A04-Acrobatic from above. A policy trained with pure RL drove it in 5.900 s; the author time is 5.950 s. The line is the car in the real game, and the square is TMNF-C given the same inputs.",
     },
     links: [{ label: "Code", href: "https://github.com/adonis-singh/TMNF-C" }],
+  },
+  {
+    id: "eyebench",
+    name: "EyeBench",
+    year: 2026,
+    blurb: "A visual reasoning benchmark for AI models.",
+    body: [
+      "A visual reasoning benchmark for AI models. It has 100 generated images, 20 for each of five tasks: spot the differences between two panels, count the loops in a tangle of curves, count the separate pieces of a graph, count the turns on a maze path, and pick the tile that completes a 4×4 pattern. Every answer is one number, and it's either right or wrong.",
+    ],
+    icon: "media/icons/eyebench.png",
+    info: [
+      ["Started", "September 2025"],
+      ["Version", "V3, since March 2026"],
+      ["Code", "Private"],
+    ],
+    tweets: [
+      { date: "Feb 27, 2026", text: "EyeBench V2 and its first leaderboard", href: "https://x.com/adonis_singh/status/2027465990024438169" },
+      { date: "Mar 10, 2026", text: "EyeBench V3", href: "https://x.com/adonis_singh/status/2031516743110214015" },
+      { date: "Oct 8, 2026", text: "What EyeBench is", href: "https://x.com/adonis_singh/status/2108283869401084201" },
+    ],
+    images: [
+      { src: "media/eyebench-spot-diff-10.jpg", thumb: "media/eyebench-spot-diff-10-thumb.jpg", alt: "Spot the differences" },
+      { src: "media/eyebench-topology-21.jpg", thumb: "media/eyebench-topology-21-thumb.jpg", alt: "Count the loops" },
+      { src: "media/eyebench-graph-41.jpg", thumb: "media/eyebench-graph-41-thumb.jpg", alt: "Count the pieces of a graph" },
+      { src: "media/eyebench-pattern-61.jpg", thumb: "media/eyebench-pattern-61-thumb.jpg", alt: "Complete the pattern" },
+      { src: "media/eyebench-maze-100.jpg", thumb: "media/eyebench-maze-100-thumb.jpg", alt: "Count the turns in a maze" },
+    ],
+    scores: { page: "https://adonis-singh.github.io/eyebench/", source: "https://adonis-singh.github.io/eyebench/data-frontier.js", top: 10 },
+    links: [],
+  },
+  {
+    id: "mcbench",
+    name: "MC-Bench",
+    year: 2025,
+    blurb: "AI models built in Minecraft, and people voted on the builds.",
+    body: [
+      "A website where people judged Minecraft builds made by AI models. Two models got the same prompt and wrote code to build it. You voted for the better build, then saw which model made which. The votes made a leaderboard.",
+      "It started from a conversation with [Aidan McLau](https://x.com/aidan_mclau), who helped bring the team together. A group of volunteers built it. It's offline now, but the code is still up.",
+    ],
+    icon: "media/icons/mcbench.png",
+    info: [
+      ["Started", "October 2024"],
+      ["Site", "mcbench.ai, offline"],
+    ],
+    tweets: [
+      { date: "Oct 25, 2024", text: "The announcement", href: "https://x.com/adonis_singh/status/1849697262953259452" },
+      { date: "Mar 1, 2025", text: "Public voting in 10 days, and the team", href: "https://x.com/adonis_singh/status/1895908048407056889" },
+      { date: "Mar 15, 2025", text: "Voting goes live", href: "https://x.com/adonis_singh/status/1900998737675116842" },
+    ],
+    links: [
+      { label: "Code", href: "https://github.com/mc-bench" },
+      { label: "TechCrunch article", href: "https://techcrunch.com/2025/03/20/a-high-schooler-built-a-website-that-lets-you-challenge-ai-models-to-a-minecraft-build-off" },
+    ],
   },
 ];

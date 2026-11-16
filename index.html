@@ -347,7 +347,8 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
 }
 .btn:active, .btn:focus-visible { border-image-source: var(--btn-on); color: var(--win); }
 .btn span { position: relative; }
-.btn svg { margin-right: 8px; fill: currentColor; shape-rendering: crispEdges; }
+/* A glyph before a label: on a button, and X's logo wherever X is named. */
+:is(.btn, .menu, .posts, .print) svg { margin-right: 8px; fill: currentColor; shape-rendering: crispEdges; }
 
 /* Scores */
 .scores { margin: 4px 0 0; padding: 0; list-style: none; line-height: 20px; }
@@ -533,6 +534,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   .print p { margin: 0 0 5pt; }
   .print dl { display: grid; grid-template-columns: 9em 1fr; gap: 0 10pt; margin: 5pt 0 0; }
   .print dt { font-weight: bold; }
+  .print dt svg { margin-right: 4pt; }
   .print dd { margin: 0; }
   .print ul { margin: 5pt 0 0; padding: 0; list-style: none; }
   .print li { display: grid; grid-template-columns: 6.5em 1fr auto; gap: 0 10pt; }
@@ -551,7 +553,7 @@ a { color: inherit; cursor: inherit; text-decoration-thickness: 1px; text-underl
   <ul class="icons" id="icons"></ul>
 </main>
 
-<script src="projects.js?v=e246f28084"></script>
+<script src="projects.js?v=12603b41c2"></script>
 <script>
 const desk = document.getElementById("desk");
 const iconList = document.getElementById("icons");
@@ -592,6 +594,7 @@ const glyphs = {
   x: '<svg width="10" height="9" viewBox="0 0 10 9"><path d="M0 0h4v1H0zM8 0h2v1H8zM1 1h2v1H1zM4 1h1v1H4zM7 1h2v1H7zM1 2h2v1H1zM4 2h1v1H4zM6 2h2v1H6zM2 3h2v1H2zM5 3h2v1H5zM3 4h2v1H3zM6 4h1v1H6zM3 5h2v1H3zM6 5h1v1H6zM2 6h4v1H2zM7 6h1v1H7zM1 7h2v1H1zM5 7h2v1H5zM8 7h1v1H8zM0 8h2v1H0zM6 8h4v1H6z"/></svg>',   // X's logo: a hollow stroke crossed by a thin one
   github: '<svg width="11" height="9" viewBox="0 0 11 9"><path d="M1 0h1v1H1zM9 0h1v1H9zM1 1h2v1H1zM8 1h2v1H8zM1 2h9v1H1zM0 3h11v1H0zM0 4h2v1H0zM4 4h3v1H4zM9 4h2v1H9zM0 5h2v1H0zM4 5h3v1H4zM9 5h2v1H9zM0 6h11v1H0zM1 7h9v1H1zM2 8h7v1H2z"/></svg>',
 };
+const glyph = name => el("template", { innerHTML: glyphs[name] }).content.firstChild;
 
 /* Menu bar. A mouse works it like the Mac's: press a title and the menu drops, drag to an item
    and let go to choose it. Letting go on the title leaves the menu open to click an item in, and
@@ -600,15 +603,15 @@ const glyphs = {
 const menubar = document.getElementById("menubar");
 const sep = { sep: true };
 const closeFront = () => { const w = frontmost(); if (w) close(w.dataset.id); };
-// An item is { label, act } or { label, href }; key is the key shown for it, and an item or
-// separator with when() is left out of the menu whenever when() is false.
+// An item is { label, act } or { label, href }; key is the key shown for it, logo puts X's logo before
+// it, and an item or separator with when() is left out of the menu whenever when() is false.
 const MENUS = [
   { title: SITE.name, className: "me", items: [
     { label: "Read Me", act: () => open("readme") },
     sep,
-    ...SITE.contact.map(l => ({ label: l.menu || l.label, href: l.href })),
+    ...SITE.contact.map(l => ({ label: l.menu || l.label, href: l.href, logo: l.glyph === "x" })),
     sep,
-    ...SITE.links.map(l => ({ label: l.menu || l.label, href: l.href })),
+    ...SITE.links.filter(l => l.menu !== false).map(l => ({ label: l.menu || l.label, href: l.href, logo: l.glyph === "x" })),
   ] },
   { title: "Projects", items: [
     ...PROJECTS.map(p => ({ label: p.name, act: () => open(p.id) })),
@@ -634,7 +637,7 @@ const titles = MENUS.map((def, n) => {
   return t;
 });
 function menuItem(it) {
-  const a = attrs(el("a", { tabIndex: -1 }, [el("span", { textContent: it.label })]), { role: "menuitem" });
+  const a = attrs(el("a", { tabIndex: -1 }, [el("span", {}, it.logo ? [glyph("x"), it.label] : it.label)]), { role: "menuitem" });
   if (it.key) a.append(attrs(el("span", { className: "key", textContent: it.key }), { "aria-hidden": "true" }));
   if (it.key) a.setAttribute("aria-keyshortcuts", it.key === "Esc" ? "Escape" : it.key);
   // A link item is a real link, so it can be middle-clicked or copied; choosing it clicks it.
@@ -1199,13 +1202,13 @@ function content(item) {
   if (item.make) c.append(...item.make());
   if (item.info) c.append(el("div", { className: "getinfo" }, el("dl", { className: "info" }, item.info.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })]))));
   // A date is shown once for the posts made on it.
-  if (item.tweets && item.tweets.length) c.append(el("h3", { className: "posts", textContent: "Posts on X" }), el("ul", { className: "tweets" }, item.tweets.map((t, i) => el("li", {}, [
+  if (item.tweets && item.tweets.length) c.append(el("h3", { className: "posts" }, [glyph("x"), "Posts on X"]), el("ul", { className: "tweets" }, item.tweets.map((t, i) => el("li", {}, [
     el("span", { className: "date", textContent: i && item.tweets[i - 1].date === t.date ? "" : t.date }), ext({ href: t.href, textContent: t.text }),
   ]))));
   if (item.links.length) c.append(el("div", { className: "buttons" }, item.links.map(l => {
     const a = el("a", { className: "btn", href: l.href, ...(l.href.startsWith("mailto:") ? {} : { target: "_blank", rel: "noopener" }) });
     a.append(el("span", { textContent: l.label }));
-    if (l.glyph) a.insertAdjacentHTML("afterbegin", glyphs[l.glyph]);
+    if (l.glyph) a.prepend(glyph(l.glyph));
     return a;
   })));
   return c;
@@ -1592,14 +1595,14 @@ systemDark.addEventListener("change", themeChanged);
    contacts, then every project, with each link written out as its URL. */
 function printSheet() {
   const url = href => ext({ href, textContent: href.replace(/^mailto:/, "") });
-  const rows = (pairs) => el("dl", {}, pairs.flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", {}, v)]));
+  const rows = (pairs) => el("dl", {}, pairs.flatMap(([k, v]) => [el("dt", {}, k), el("dd", {}, v)]));
   const sheet = el("article", { className: "print" }, [
     el("h1", { textContent: SITE.name }),
     ...SITE.intro.map(t => el("p", { textContent: t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)") })),   // a link prints as text (url), as in a project's paragraphs
     rows([
       ["Website", url(document.querySelector('link[rel="canonical"]').href)],
       ...SITE.contact.filter(l => l.href.startsWith("mailto:")).map(l => [l.label, url(l.href)]),
-      ...SITE.links.map(l => [l.label, url(l.href)]),
+      ...SITE.links.map(l => [l.glyph === "x" ? [glyph("x"), l.label] : l.label, url(l.href)]),
     ]),
   ]);
   for (const p of PROJECTS) {

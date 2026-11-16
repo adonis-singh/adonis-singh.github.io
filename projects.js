@@ -116,7 +116,7 @@ window.SITE = {
   // the Read Me's buttons too, after the contact buttons, with its glyph.
   // menu is the item's name in the menu, when it differs from label, or false to leave it out of the menu.
   links: [
-    { label: "X", menu: false, glyph: "x", href: "https://x.com/adonis_singh", bar: true, barGlyph: "x" },
+    { label: "X", menu: false, href: "https://x.com/adonis_singh", bar: true, barGlyph: "x" },
     { label: "GitHub", glyph: "github", href: "https://github.com/adonis-singh", bar: true, button: true },
   ],
 };

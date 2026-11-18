@@ -201,8 +201,8 @@ window.PROJECTS = [
     ],
     tweets: [
       { date: "Sep 15, 2026", text: "The announcement", href: "https://x.com/adonis_singh/status/2099836977793085525" },
-      { date: "Sep 15, 2026", text: "Matching the original compilers", href: "https://x.com/adonis_singh/status/2099836988605989044" },
       { date: "Sep 15, 2026", text: "Things found in the code", href: "https://x.com/adonis_singh/status/2099836985581985903" },
+      { date: "Sep 15, 2026", text: "Matching the original compilers", href: "https://x.com/adonis_singh/status/2099836988605989044" },
     ],
     // media/re4-build.sha1 is a copy of config/G4BE08/build.sha1 from the repo.
     check: {
